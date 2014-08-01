@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>DIMES</title>
+
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+	<!-- Optional theme -->
+	<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+	<link href='http://fonts.googleapis.com/css?family=Muli' rel='stylesheet' type='text/css'>
+	<style>
+  	.navbar-nav {
+    	width: 100%;
+    	text-align: center;
+    	margin: 20px;
+	}
+
+    .navbar-nav>li {
+      	float: none;
+      	display: inline-block;
+    }
+    .navbar-nav>li>a {
+      	color: #777;
+      	font-size: 1.2em;
+      	font-weight: 100;
+    }
+    body { 
+    	padding-bottom: 70px;
+    	font-family: sans-serif; 
+    	background-color: #AFD8E2;
+    }
+    footer {
+    	padding-top: 10px;
+    	color: #777;
+    	text-align: center;
+    	font-size: .8em;
+    }
+    footer>nav{
+    	background-color: #F2F3F4;
+    }
+	</style>
+  </head>
+  <body>
+  <nav class="navbar navbar-default" role="navigation">
+    <div class="container">
+      <ul class="nav navbar-nav">
+        <li><a href="#">Home</a></li>
+        <li><a href="#">About</a></li>
+        <li><a href="#">Contact</a></li>
+        <li><img src="/static/dimes_logo4.gif" width="120px"></li>
+        <li><a href="#">Cruises</a></li>
+        <li><a href="#">Components</a></li>
+        <li><a href="#">Data</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <content>
+  <div class="container">
+    {% block content %}{% endblock %}
+  </div>
+  </content>
+
+  <footer>
+    <nav class="navbar navbar-fixed-bottom" role="navigation">
+      <div class="container">
+        <div class="row">
+          <div class="col-xs-12">
+            <ul class="nav nav-pills navbar-nav" style ="margin:0px;">
+              <li><a href="http://nsf.gov"><img alt="Nsf_logo" height="40" src="http://dimes.ucsd.edu/images/nsf_logo.gif?1330040906"></a></li>
+              <li><a href="http://www.nerc.ac.uk"><img alt="Ner_logo" height="40" src="http://dimes.ucsd.edu/images/ner_logo.gif?1283984069"></a></li>
+              <li><a href="http://www.antarctica.ac.uk"><img alt="Bas_logo" height="40" src="http://dimes.ucsd.edu/images/bas_logo.gif?1283984069"></a></li>
+              <li><a href="http://www.clivar.org"><img alt="Clivar_logo" height="40" src="http://dimes.ucsd.edu/images/clivar_logo.png?1330040906"></a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="row">
+          <p>Dimes is sponsored by the National Science Foundation (U.S.), Natural Environment Research Council (U.K), and British Antarctic Survey (U.K.)</p>
+        </div>
+      </div>
+    </nav>
+  </footer>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.js"></script>
+  </body>
+</html>
