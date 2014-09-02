@@ -10,6 +10,7 @@ urlpatterns = patterns('',
     url(r'about$', 'dimes.views.about', name='about'),
     url(r'components$', 'dimes.views.components', name='components'),
     url(r'contact$', 'dimes.views.contact', name='contact'),
+    url(r'cruises$', 'dimes.views.cruises', name='cruises'),
     url(r'^$', 'dimes.views.index', name='index'),
     # url(r'^blog/', include('blog.urls')),
 
