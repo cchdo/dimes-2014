@@ -7,10 +7,15 @@ from dimes import settings
 
 urlpatterns = patterns('',
     # Examples:
-    url(r'about$', 'dimes.views.about', name='about'),
     url(r'components$', 'dimes.views.components', name='components'),
-    url(r'contact$', 'dimes.views.contact', name='contact'),
-    url(r'cruises$', 'dimes.views.cruises', name='cruises'),
+    url(r'people$', 'dimes.views.people', name='people'),
+    url(r'publications$', 'dimes.views.publications', name='publications'),
+    url(r'cruises$', 'dimes.views.fieldwork', name='fieldwork'),
+    url(r'data$', 'dimes.views.data', name='data'),
+    url(r'fieldwork$', 'dimes.views.fieldwork', name='fieldwork'),
+    url(r'cruise_data/(\w+)$', 'dimes.views.cruise_page', name='cruise_data'),
+    url(r'cruise_reports$', 'dimes.views.cruise_reports', name='cruise_reports'),
+    url(r'media$', 'dimes.views.media', name='media'),
     url(r'^$', 'dimes.views.index', name='index'),
     # url(r'^blog/', include('blog.urls')),
 
