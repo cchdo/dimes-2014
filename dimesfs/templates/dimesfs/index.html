@@ -29,14 +29,56 @@
     });
     function set_table(){
       var new_tbody = $('<tbody id="fs_table"></tbody>');
-      var keys = Object.keys(fs_struct);
-      for (var i=0; i < keys.length; i++){
+      var files = []
+      $.ajax({
+        type: "POST",
+        url: "/dimesfs/dirflist",
+        data: JSON.stringify(current_path),
+        success: function(data){
+          files = data;
+        },
+        dataType: 'json',
+        async:false
+      });
+
+      var dug_tree = fs_struct;
+      for (var i=0; i< current_path.length; i++){
+        var cd = current_path[i];
+        if (dug_tree.hasOwnProperty(cd)){
+          dug_tree = dug_tree[cd];
+        }
+      }
+
+      if (current_path.length > 0){
+        var tr = $("<tr onclick='dimesfs_cd(\"..\")'></tr>");
+        tr.append($('<td><span class="glyphicon glyphicon-folder-close"></span></td>'));
+        tr.append($('<td>..</td>'));
+        new_tbody.append(tr);
+      }
+
+      for (var i=0; i < files.length; i++){
         var tr = $("<tr></tr>");
+        tr.append($('<td><span class="glyphicon glyphicon-file"></span></td>'));
+        tr.append($('<td>'+files[i]+'</td>'));
+        new_tbody.append(tr);
+      }
+
+      var keys = Object.keys(dug_tree);
+      for (var i=0; i < keys.length; i++){
+        var tr = $("<tr onclick='dimesfs_cd(\""+keys[i]+"\")'></tr>");
         tr.append($('<td><span class="glyphicon glyphicon-folder-close"></span></td>'));
         tr.append($('<td>'+keys[i]+'</td>'));
         new_tbody.append(tr);
       }
       $("#fs_table").replaceWith(new_tbody);
+    }
+    function dimesfs_cd(path){
+      if (path == ".."){
+        current_path.pop()
+      } else {
+        current_path.push(path)
+      }
+      set_table();
     }
     </script>
   </body>
