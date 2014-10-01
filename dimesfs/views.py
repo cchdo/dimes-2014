@@ -1,4 +1,5 @@
 import json
+import os.path
 from collections import defaultdict
 import os
 
@@ -36,6 +37,19 @@ def dirflist(request):
         files = [d for d in tsc.query_data(Query.tags_any("eq", tag))]
         fslist = [f.fname for f in files]
     return HttpResponse(json.dumps(fslist), content_type="application/json")
+
+
+def upload(request):
+    path = request.POST['path']
+    blob = request.FILES['file']
+    path = os.path.normpath(path)
+    if path == '.':
+        path = ''
+    tags = ['dimes_directory:/{0}'.format(path)]
+    resp = tsc.create(blob, unicode(blob), tags)
+    return HttpResponse(json.dumps(dict(uri=resp.uri)),
+                        content_type="application/json")
+
 
 def index(request):
     return render(request, "dimesfs/index.html")
