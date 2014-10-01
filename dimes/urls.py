@@ -16,6 +16,7 @@ urlpatterns = patterns('',
     url(r'cruise_data/(\w+)$', 'dimes.views.cruise_page', name='cruise_data'),
     url(r'cruise_reports$', 'dimes.views.cruise_reports', name='cruise_reports'),
     url(r'media$', 'dimes.views.media', name='media'),
+    url(r'^dimesfs/', include('dimesfs.urls')),
     url(r'^$', 'dimes.views.index', name='index'),
     # url(r'^blog/', include('blog.urls')),
 
