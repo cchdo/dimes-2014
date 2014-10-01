@@ -2,18 +2,20 @@ import json
 from collections import defaultdict
 import os
 
+from django.conf import settings
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
 from tagstore.client import TagStoreClient, Query
 
-ts_api_endpoint = "http://umi.local:5000/api/v1"
+
+tsc = TagStoreClient(settings.TS_API_ENDPOINT)
+
 
 def fslist(request):
     Tree = lambda: defaultdict(Tree) # did you mean recursion?
     fs_tree = Tree()
-    tsc = TagStoreClient(ts_api_endpoint)
     fs_tags = tsc.query_tags(["tag", "like", "dimes_directory:%"])
     fs_taglist = [t for t in fs_tags]
     fs_pathlist = [t.tag.split(":")[1][1:].split("/") for t in fs_taglist]
@@ -28,7 +30,6 @@ def fslist(request):
 @csrf_exempt
 def dirflist(request):
     fslist=[]
-    tsc = TagStoreClient(ts_api_endpoint)
     if request.method == "POST":
         #probably won't work on a non *nix OS
         tag = "dimes_directory:" + os.path.join("/", *json.loads(request.body))
