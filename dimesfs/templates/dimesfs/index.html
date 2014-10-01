@@ -13,6 +13,7 @@
         <tr>
           <th style="width:20px"></th>
           <th>Name</th>
+          <th></th>
         </tr>
       </thead>
       <tbody id="fs_table">
@@ -59,8 +60,9 @@
 
       if (current_path.length > 0){
         var tr = $("<tr onclick='dimesfs_cd(\"..\")'></tr>");
-        tr.append($('<td><span class="glyphicon glyphicon-folder-close"></span></td>'));
+        tr.append($('<td><span class="glyphicon glyphicon-folder-open"></span></td>'));
         tr.append($('<td>..</td>'));
+        tr.append($('<td></td>'));
         new_tbody.append(tr);
       }
 
@@ -68,6 +70,9 @@
         var tr = $("<tr></tr>");
         tr.append($('<td><span class="glyphicon glyphicon-file"></span></td>'));
         tr.append($('<td>'+files[i]+'</td>'));
+        tr.append($('<td><button type="button" onclick="dimesfs_del(this, \'' +
+          files[i] + '\')" class="btn btn-default btn-xs pull-right">' + 
+          '<span class="glyphicon glyphicon-remove"></span></button></td>'));
         new_tbody.append(tr);
       }
 
@@ -76,9 +81,26 @@
         var tr = $("<tr onclick='dimesfs_cd(\""+keys[i]+"\")'></tr>");
         tr.append($('<td><span class="glyphicon glyphicon-folder-close"></span></td>'));
         tr.append($('<td>'+keys[i]+'</td>'));
+        tr.append($("<td></td>"));
         new_tbody.append(tr);
       }
       $("#fs_table").replaceWith(new_tbody);
+    }
+    function dimesfs_del(target, path) {
+      var fullpath = current_path.slice(0);
+      fullpath.push(path);
+      $.ajax({
+        type: "POST",
+        url: "/dimesfs/delete",
+        data: JSON.stringify(fullpath),
+        success: function(data){
+          if (data.status == "ok") {
+            $(target).parents('tr').hide('fast').remove();
+          }
+        },
+        dataType: 'json',
+        async: false
+      });
     }
     function dimesfs_cd(path){
       if (path == ".."){

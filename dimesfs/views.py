@@ -28,15 +28,34 @@ def fslist(request):
     del fs_tree[""]
     return HttpResponse(json.dumps(fs_tree), content_type="application/json")
 
+def _path_from_json(request):
+    return os.path.join("/", *json.loads(request.body))
+
 @csrf_exempt
 def dirflist(request):
     fslist=[]
     if request.method == "POST":
         #probably won't work on a non *nix OS
-        tag = "dimes_directory:" + os.path.join("/", *json.loads(request.body))
+        tag = "dimes_directory:" + _path_from_json(request)
         files = [d for d in tsc.query_data(Query.tags_any("eq", tag))]
         fslist = [f.fname for f in files]
     return HttpResponse(json.dumps(fslist), content_type="application/json")
+
+@csrf_exempt
+def delete(request):
+    if request.method == "POST":
+        path = _path_from_json(request)
+        fname = os.path.basename(path)
+        path = os.path.dirname(path)
+        data = tsc.query_data(
+            Query.tags_any("eq", "dimes_directory:{0}".format(path)),
+            ["fname", "eq", fname], limit=1, single=True)
+        if data:
+            resp = tsc.delete(data.id)
+            return HttpResponse(json.dumps(dict(status='ok')),
+                        content_type="application/json")
+    return HttpResponse(json.dumps(dict(status='failed')),
+                        content_type="application/json")
 
 
 def upload(request):

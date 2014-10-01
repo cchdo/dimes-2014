@@ -6,5 +6,6 @@ urlpatterns = patterns('',
         url(r'fslist$', views.fslist, name='fslist'),
         url(r'dirflist$', views.dirflist, name='dirflist'),
         url(r'upload$', views.upload, name='upload'),
+        url(r'delete$', views.delete, name='delete'),
         url(r'^$', views.index, name='index'),
         )
