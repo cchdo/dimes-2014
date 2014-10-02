@@ -79,13 +79,13 @@
         tr.append($('<td></td>'));
         new_tbody.append(tr);
       }
-      files = files.sort(localeCompare);
+      //files = files.sort(localeCompare);
       for (var i=0; i < files.length; i++){
         var tr = $("<tr></tr>");
         tr.append($('<td><span class="glyphicon glyphicon-file"></span></td>'));
-        tr.append($('<td>'+files[i]+'</td>'));
+        tr.append($('<td><a href="'+files[i].url+'">'+files[i].fname+'</a></td>'));
         tr.append($('<td><button type="button" onclick="dimesfs_del(this, \'' +
-          files[i] + '\')" class="btn btn-default btn-xs pull-right">' + 
+          files[i].fname + '\')" class="btn btn-default btn-xs pull-right">' + 
           '<span class="glyphicon glyphicon-remove"></span></button></td>'));
         new_tbody.append(tr);
       }

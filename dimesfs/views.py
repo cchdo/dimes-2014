@@ -36,7 +36,7 @@ def dirflist(request):
     if request.method == "POST":
         tag = "dimes_directory:" + _path_from_json(request)
         files = [d for d in tsc.query_data(Query.tags_any("eq", tag))]
-        fslist = [f.fname for f in files]
+        fslist = [{"fname": f.fname, "url": f.uri} for f in files]
     return HttpResponse(json.dumps(fslist), content_type="application/json")
 
 @csrf_exempt
