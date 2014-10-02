@@ -79,7 +79,7 @@
         tr.append($('<td></td>'));
         new_tbody.append(tr);
       }
-      //files = files.sort(localeCompare);
+      files = files.sort(function(a,b){return localeCompare(a.fname, b.fname)});
       for (var i=0; i < files.length; i++){
         var tr = $("<tr></tr>");
         tr.append($('<td><span class="glyphicon glyphicon-file"></span></td>'));
