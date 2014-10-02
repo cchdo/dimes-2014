@@ -104,18 +104,21 @@
     function dimesfs_del(target, path) {
       var fullpath = current_path.slice(0);
       fullpath.push(path);
-      $.ajax({
-        type: "POST",
-        url: "/dimesfs/delete",
-        data: JSON.stringify(fullpath),
-        success: function(data){
-          if (data.status == "ok") {
-            $(target).parents('tr').hide('fast').remove();
-          }
-        },
-        dataType: 'json',
-        async: false
-      });
+      var answer = confirm("Delete " + path + "?");
+      if (answer) {
+        $.ajax({
+          type: "POST",
+          url: "/dimesfs/delete",
+          data: JSON.stringify(fullpath),
+          success: function(data){
+            if (data.status == "ok") {
+              $(target).parents('tr').hide('fast').remove();
+            }
+          },
+          dataType: 'json',
+          async: false
+        });
+      }
     }
     function dimesfs_cd(path){
       if (path == ".."){
