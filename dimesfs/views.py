@@ -27,14 +27,14 @@ def fslist(request):
     del fs_tree[""]
     return HttpResponse(json.dumps(fs_tree), content_type="application/json")
 
-def _path_from_json(request):
-    return "/" + "/".join(json.loads(request.body))
+def _path_from_json(string):
+    return "/" + "/".join(json.loads(string))
 
 @csrf_exempt
 def dirflist(request):
     fslist=[]
     if request.method == "POST":
-        tag = "dimes_directory:" + _path_from_json(request)
+        tag = "dimes_directory:" + _path_from_json(request.body)
         files = [d for d in tsc.query_data(Query.tags_any("eq", tag))]
         fslist = [{"fname": f.fname, "url": f.uri} for f in files]
     return HttpResponse(json.dumps(fslist), content_type="application/json")
@@ -42,7 +42,7 @@ def dirflist(request):
 @csrf_exempt
 def delete(request):
     if request.method == "POST":
-        path = _path_from_json(request)
+        path = _path_from_json(request.body)
         fname = os.path.basename(path)
         path = os.path.dirname(path)
         data = tsc.query_data(
@@ -55,14 +55,13 @@ def delete(request):
     return HttpResponse(json.dumps(dict(status='failed')),
                         content_type="application/json")
 
-
 def upload(request):
-    path = request.POST['path']
+    path = _path_from_json(request.POST['path'])
     blob = request.FILES['file']
     path = os.path.normpath(path)
     if path == '.':
         path = ''
-    tags = ['dimes_directory:/{0}'.format(path)]
+    tags = ['dimes_directory:{0}'.format(path)]
     resp = tsc.create(blob, unicode(blob), tags)
     return HttpResponse(json.dumps(dict(uri=resp.uri)),
                         content_type="application/json")

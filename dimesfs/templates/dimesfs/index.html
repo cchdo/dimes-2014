@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>DimesFS</title>
     <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token  }}">
   </head>
   <body>
     <table class="table table-hover">
@@ -19,14 +20,6 @@
       <tbody id="fs_table">
       </tbody>
     </table>
-    <div>
-      <form action="/dimesfs/upload" method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-        <input type="text" name="path" value="">
-        <input type="file" name="file">
-        <input type="submit" value="Submit">
-      </form>
-    </div>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.js"></script>
     <script>
@@ -60,6 +53,29 @@
     }
     function set_table(){
       var new_tbody = $('<tbody id="fs_table"></tbody>');
+
+      // Change directory list item
+      var new_dir_form = $('<input type="text" class="form-control input-sm" placeholder="new directory">')
+        .blur(function() {dimesfs_cd($(this).val());});
+      var tr = createRow(createIcon('plus'), new_dir_form, '');
+      new_tbody.append(tr);
+
+      // Upload files list item
+      var new_upload_form = $('<form action="/dimesfs/upload" method="POST" ' + 
+          'class="form-inline" role="form"' +
+          'enctype="multipart/form-data">' + 
+          "{% csrf_token %}" +
+          '<div class="form-group form-group-sm">' + 
+          "<input type='hidden' name='path' value='" + JSON.stringify(current_path) + "'>" +
+          '<div class="input-group">' +
+          '<input type="file" name="file" class="form-control input-sm" placeholder="new directory">' +
+          '<span class="input-group-btn"><input class="btn btn-default btn-sm" type="submit" value="Upload">' +
+          '</span></div>' +
+          '</div></form>');
+      var tr = createRow(createIcon('upload'), new_upload_form, '');
+      new_tbody.append(tr);
+
+      // Add list items for files and directories
       var files = [];
       parseHash();
       $.ajax({
@@ -109,6 +125,7 @@
           .click(function () {dimesfs_cd(key);});
         new_tbody.append(tr);
       }
+
       $("#fs_table").replaceWith(new_tbody);
     }
     function dimesfs_del(target, path) {
