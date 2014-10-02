@@ -1,7 +1,6 @@
 import json
-import os.path
-from collections import defaultdict
 import os
+from collections import defaultdict
 
 from django.conf import settings
 from django.shortcuts import render
@@ -29,13 +28,12 @@ def fslist(request):
     return HttpResponse(json.dumps(fs_tree), content_type="application/json")
 
 def _path_from_json(request):
-    return os.path.join("/", *json.loads(request.body))
+    return "/" + "/".join(json.loads(request.body))
 
 @csrf_exempt
 def dirflist(request):
     fslist=[]
     if request.method == "POST":
-        #probably won't work on a non *nix OS
         tag = "dimes_directory:" + _path_from_json(request)
         files = [d for d in tsc.query_data(Query.tags_any("eq", tag))]
         fslist = [f.fname for f in files]
