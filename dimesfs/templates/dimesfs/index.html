@@ -32,14 +32,25 @@
     <script>
     var fs_struct;
     var current_path = [];
+    if (window.location.hash == ""){
+      window.location.hash = encodeURIComponent(JSON.stringify([])); 
+    }
     $.getJSON("/dimesfs/fslist", function(data){
       fs_struct = data;
       set_table();
     });
+    function parseHash(){
+      try{
+        current_path = JSON.parse(decodeURIComponent(window.location.hash.slice(1)));
+      } catch (e) {
+        window.location.hash = encodeURIComponent(JSON.stringify([])); 
+      }
+    }
     function localeCompare(a,b){return a.localeCompare(b)}
     function set_table(){
       var new_tbody = $('<tbody id="fs_table"></tbody>');
-      var files = []
+      var files = [];
+      parseHash();
       $.ajax({
         type: "POST",
         url: "/dimesfs/dirflist",
@@ -56,6 +67,8 @@
         var cd = current_path[i];
         if (dug_tree.hasOwnProperty(cd)){
           dug_tree = dug_tree[cd];
+        } else {
+          window.location.hash = encodeURIComponent(JSON.stringify([])); 
         }
       }
 
@@ -110,8 +123,9 @@
       } else {
         current_path.push(path)
       }
-      set_table();
+      window.location.hash = encodeURIComponent(JSON.stringify(current_path));
     }
+    window.onhashchange = set_table;
     </script>
   </body>
 </html>
