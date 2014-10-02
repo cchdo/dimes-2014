@@ -47,6 +47,17 @@
       }
     }
     function localeCompare(a,b){return a.localeCompare(b)}
+    function createIcon(type) {
+        return $('<span class="glyphicon glyphicon-' + type + '"></span>');
+    }
+    function createRow(icon, body, accessory) {
+      var tr = $("<tr></tr>");
+      tr.append($('<td></td>').append(icon));
+      tr.append($('<td></td>').append(body));
+      tr.append($('<td></td>').append(accessory));
+      return tr;
+
+    }
     function set_table(){
       var new_tbody = $('<tbody id="fs_table"></tbody>');
       var files = [];
@@ -73,30 +84,29 @@
       }
 
       if (current_path.length > 0){
-        var tr = $("<tr onclick='dimesfs_cd(\"..\")'></tr>");
-        tr.append($('<td><span class="glyphicon glyphicon-folder-open"></span></td>'));
-        tr.append($('<td>..</td>'));
-        tr.append($('<td></td>'));
+        var tr = createRow(createIcon('folder-open'), '..', '')
+          .click(function () {dimesfs_cd("..");});
         new_tbody.append(tr);
       }
       files = files.sort(function(a,b){return localeCompare(a.fname, b.fname)});
       for (var i=0; i < files.length; i++){
-        var tr = $("<tr></tr>");
-        tr.append($('<td><span class="glyphicon glyphicon-file"></span></td>'));
-        tr.append($('<td><a href="'+files[i].url+'">'+files[i].fname+'</a></td>'));
-        tr.append($('<td><button type="button" onclick="dimesfs_del(this, \'' +
-          files[i].fname + '\')" class="btn btn-default btn-xs pull-right">' + 
-          '<span class="glyphicon glyphicon-remove"></span></button></td>'));
+        var file = files[i];
+        var delete_button = $('<button type="button" class="btn btn-default btn-xs pull-right"></button>');
+        delete_button.append(createIcon('remove'));
+        delete_button.click(function() { dimesfs_del(this, file); });
+        var tr = createRow(
+            createIcon('file'),
+            $('<a href="' + files[i].url + '">' + files[i].fname + '</a>'),
+            delete_button);
         new_tbody.append(tr);
       }
 
       var keys = Object.keys(dug_tree);
       keys = keys.sort(localeCompare);
       for (var i=0; i < keys.length; i++){
-        var tr = $("<tr onclick='dimesfs_cd(\""+keys[i]+"\")'></tr>");
-        tr.append($('<td><span class="glyphicon glyphicon-folder-close"></span></td>'));
-        tr.append($('<td>'+keys[i]+'</td>'));
-        tr.append($("<td></td>"));
+        var key = keys[i];
+        var tr = createRow(createIcon('folder-close'), keys[i], '')
+          .click(function () {dimesfs_cd(key);});
         new_tbody.append(tr);
       }
       $("#fs_table").replaceWith(new_tbody);
