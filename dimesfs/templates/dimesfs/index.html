@@ -62,13 +62,26 @@
       return '<input type="hidden" name="' + name + "\" value='" + value + "'>";
     }
     function createRowFile(file) {
-      var delete_button = $('<button type="button" class="btn btn-default btn-xs pull-right"></button>');
+      var accessories = $('<span class="pull-right"></span>');
+      if (file.fname.slice(-4) == ".zip") {
+        var unzip_button = $('<button type="button" class="btn btn-default btn-xs"></button>');
+        unzip_button.append(createIcon('gift'));
+        unzip_button.click(function() { dimesfs_unzip(this, file); });
+        accessories.append(unzip_button);
+      }
+      var delete_button = $('<button type="button" class="btn btn-default btn-xs"></button>');
       delete_button.append(createIcon('remove'));
       delete_button.click(function() { dimesfs_del(this, file); });
+      accessories.append(delete_button);
       var tr = createRow(
         createIcon('file'),
         $('<a href="' + file.url + '">' + file.fname + '</a>'),
-        delete_button);
+        accessories);
+      return tr;
+    }
+    function createRowDir(key) {
+      var tr = createRow(createIcon('folder-close'), key, '')
+        .click(function () {dimesfs_cd(key);});
       return tr;
     }
     function set_table(){
@@ -137,8 +150,7 @@
       keys = keys.sort(localeCompare);
       for (var i=0; i < keys.length; i++){
         var key = keys[i];
-        var tr = createRow(createIcon('folder-close'), keys[i], '')
-          .click(function () {dimesfs_cd(key);});
+        var tr = createRowDir(key);
         new_tbody.append(tr);
       }
 
@@ -150,6 +162,29 @@
       }
 
       $("#fs_table").replaceWith(new_tbody);
+    }
+    function dimesfs_add_dir(tbody, dname) {
+      if ($(tbody.children('tr:contains("' + dname + '")'))) {
+        return;
+      }
+      var tr = createRowDir(dname);
+      tbody.append(tr);
+    }
+    function dimesfs_unzip(target, file) {
+      $.ajax({
+        type: "POST",
+        url: "/dimesfs/unzip",
+        data: {
+          uri: file.url,
+          csrfmiddlewaretoken: $.cookie('csrftoken')
+        },
+        success: function(data) {
+          var dname = data['dirname'];
+          dimesfs_add_dir($(target).parents('tbody'), dname);
+        },
+        dataType: 'json',
+        async: false
+      });
     }
     function dimesfs_del(target, file) {
       var answer = confirm("Delete " + file.fname + "?");

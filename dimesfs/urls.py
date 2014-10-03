@@ -9,6 +9,7 @@ urlpatterns = patterns('',
         url(r'upload$', views.upload, name='upload'),
         url(r'delete$', views.delete, name='delete'),
         url(r'download/(?P<uri_frag>.+)$', views.download, name='download'),
+        url(r'unzip$', views.unzip, name='unzip'),
         url(r'^$', views.index, name='index'),
         )
 

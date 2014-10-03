@@ -2,10 +2,13 @@ import json
 import os
 import base64
 from collections import defaultdict
+from zipfile import ZipFile
+from tempfile import SpooledTemporaryFile
+from shutil import copyfileobj
 
 from django.conf import settings
 from django.shortcuts import render, redirect
-from django.http import HttpResponse, StreamingHttpResponse
+from django.http import HttpResponse, StreamingHttpResponse, Http404
 from django.views.decorators.csrf import csrf_exempt
 
 import requests
@@ -116,6 +119,41 @@ def upload(request):
                             content_type="application/json")
     else:
         return redirect(request.META['HTTP_REFERER'])
+
+
+def unzip(request):
+    if request.method == "POST":
+        uri = request.POST['uri']
+        data = tsc.query_data(["uri", "eq", uri], limit=1, single=True)
+
+        # make the new dimes directory, current dimes directory + zipname
+        old_dir = [tag for tag in data.tags if
+                   tag.startswith('dimes_directory:')]
+        tags = [tag for tag in data.tags if not
+                tag.startswith('dimes_directory:')]
+        if not old_dir:
+            raise Http404()
+        old_dir = old_dir[0].split(':')[1]
+        zipdirname = os.path.splitext(data.fname)[0].replace('/', '-')
+        new_dir = os.path.join(old_dir, zipdirname)
+
+        # put the new tag onto the old tags
+        dir_tag = 'dimes_directory:{0}'.format(new_dir)
+        tags.append(dir_tag)
+
+        fobj = data.open()
+        with SpooledTemporaryFile(max_size=2**26) as tfile:
+            copyfileobj(fobj, tfile)
+            tfile.seek(0)
+            with ZipFile(tfile, 'r') as zfile:
+                for info in zfile.infolist():
+                    fname = info.filename
+                    if fname.startswith('__MACOSX'):
+                        continue
+                    with zfile.open(info) as fobj:
+                        tsc.create(fobj, fname, tags)
+        return HttpResponse(json.dumps(dict(dirname=zipdirname)),
+                            content_type="application/json")
 
 
 def index(request):
