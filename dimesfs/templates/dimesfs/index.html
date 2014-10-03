@@ -126,17 +126,25 @@
         new_tbody.append(tr);
       }
 
+      files = files.sort(function(a,b){return localeCompare(a.fname, b.fname)});
+      for (var i=0; i < files.length; i++){
+        var file = files[i];
+        var tr = createRowFile(files[i]);
+        new_tbody.append(tr);
+      }
+
       $("#fs_table").replaceWith(new_tbody);
     }
-    function dimesfs_del(target, path) {
-      var fullpath = current_path.slice(0);
-      fullpath.push(path);
-      var answer = confirm("Delete " + path + "?");
+    function dimesfs_del(target, file) {
+      var answer = confirm("Delete " + file.fname + "?");
       if (answer) {
         $.ajax({
           type: "POST",
           url: "/dimesfs/delete",
-          data: JSON.stringify(fullpath),
+          data: {
+            uri: file.url,
+            csrfmiddlewaretoken: $.cookie('csrftoken')
+          },
           success: function(data){
             if (data.status == "ok") {
               $(target).parents('tr').hide('fast').remove();

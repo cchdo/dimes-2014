@@ -39,15 +39,16 @@ def dirflist(request):
         fslist = [{"fname": f.fname, "url": f.uri} for f in files]
     return HttpResponse(json.dumps(fslist), content_type="application/json")
 
-@csrf_exempt
+
 def delete(request):
+    """POST delete
+
+    body should be the uri of the file to delete.
+
+    """
     if request.method == "POST":
-        path = _path_from_json(request.body)
-        fname = os.path.basename(path)
-        path = os.path.dirname(path)
-        data = tsc.query_data(
-            Query.tags_any("eq", "dimes_directory:{0}".format(path)),
-            ["fname", "eq", fname], limit=1, single=True)
+        uri = request.POST['uri']
+        data = tsc.query_data(["uri", "eq", uri], limit=1, single=True)
         if data:
             resp = tsc.delete(data.id)
             return HttpResponse(json.dumps(dict(status='ok')),
