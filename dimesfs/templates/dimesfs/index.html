@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>DimesFS</title>
     <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/dimesfs/static/vendor/dropzone/css/dropzone.css">
+    <link rel="stylesheet" href="/dimesfs/static/dimesfs.css">
     <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token  }}">
   </head>
   <body>
@@ -22,11 +24,17 @@
     </table>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.js"></script>
+    <script src="/dimesfs/static/vendor/dropzone/dropzone.js"></script>
+    <script src="/dimesfs/static/js/jquery.cookie.js"></script>
     <script>
+    Dropzone.autoDiscover = false;
+
     var fs_struct;
     var current_path = [];
     if (window.location.hash == ""){
       window.location.hash = encodeURIComponent(JSON.stringify([])); 
+    } else {
+      parseHash();
     }
     $.getJSON("/dimesfs/fslist", function(data){
       fs_struct = data;
@@ -49,7 +57,19 @@
       tr.append($('<td></td>').append(body));
       tr.append($('<td></td>').append(accessory));
       return tr;
-
+    }
+    function input_hidden(name, value) {
+      return '<input type="hidden" name="' + name + "\" value='" + value + "'>";
+    }
+    function createRowFile(file) {
+      var delete_button = $('<button type="button" class="btn btn-default btn-xs pull-right"></button>');
+      delete_button.append(createIcon('remove'));
+      delete_button.click(function() { dimesfs_del(this, file); });
+      var tr = createRow(
+        createIcon('file'),
+        $('<a href="' + file.url + '">' + file.fname + '</a>'),
+        delete_button);
+      return tr;
     }
     function set_table(){
       var new_tbody = $('<tbody id="fs_table"></tbody>');
@@ -61,17 +81,25 @@
       new_tbody.append(tr);
 
       // Upload files list item
-      var new_upload_form = $('<form action="/dimesfs/upload" method="POST" ' + 
-          'class="form-inline" role="form"' +
-          'enctype="multipart/form-data">' + 
-          "{% csrf_token %}" +
-          '<div class="form-group form-group-sm">' + 
-          "<input type='hidden' name='path' value='" + JSON.stringify(current_path) + "'>" +
-          '<div class="input-group">' +
-          '<input type="file" name="file" class="form-control input-sm" placeholder="new directory">' +
-          '<span class="input-group-btn"><input class="btn btn-default btn-sm" type="submit" value="Upload">' +
-          '</span></div>' +
-          '</div></form>');
+      var new_upload_form = $(
+          '<form class="dropzone" action="/dimesfs/upload" method="POST" enctype="multipart/form-data">'+
+          input_hidden("csrfmiddlewaretoken", $.cookie("csrftoken")) + 
+          input_hidden("path", JSON.stringify(current_path)) + 
+          '<div class="fallback input-group">' +
+          '<input type="file" name="file" class="form-control input-sm" multiple>' +
+          '<span class="input-group-btn">' +
+          '<input class="btn btn-default btn-sm" type="submit" value="Upload">' +
+          '</span>' +
+          '</div>' +
+        '</form>');
+      new_upload_form.dropzone({
+        //forceFallback: true
+        success: function(_, resp) {
+          files.push(resp);
+          var tr = createRowFile(resp);
+          new_tbody.append(tr);
+        }
+      });
       var tr = createRow(createIcon('upload'), new_upload_form, '');
       new_tbody.append(tr);
 
@@ -102,18 +130,6 @@
       if (current_path.length > 0){
         var tr = createRow(createIcon('folder-open'), '..', '')
           .click(function () {dimesfs_cd("..");});
-        new_tbody.append(tr);
-      }
-      files = files.sort(function(a,b){return localeCompare(a.fname, b.fname)});
-      for (var i=0; i < files.length; i++){
-        var file = files[i];
-        var delete_button = $('<button type="button" class="btn btn-default btn-xs pull-right"></button>');
-        delete_button.append(createIcon('remove'));
-        delete_button.click(function() { dimesfs_del(this, file); });
-        var tr = createRow(
-            createIcon('file'),
-            $('<a href="' + files[i].url + '">' + files[i].fname + '</a>'),
-            delete_button);
         new_tbody.append(tr);
       }
 

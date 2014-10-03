@@ -1,0 +1,9 @@
+.dropzone {
+  min-height: 80px;
+}
+.dropzone .dz-default.dz-message {
+  background-size: 214px 203px;
+  height: 61px;
+  margin-left: -103px;
+  margin-top: -32px;
+}

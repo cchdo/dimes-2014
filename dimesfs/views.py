@@ -3,7 +3,7 @@ import os
 from collections import defaultdict
 
 from django.conf import settings
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
@@ -56,6 +56,7 @@ def delete(request):
     return HttpResponse(json.dumps(dict(status='failed')),
                         content_type="application/json")
 
+
 def upload(request):
     path = _path_from_json(request.POST['path'])
     blob = request.FILES['file']
@@ -64,8 +65,11 @@ def upload(request):
         path = ''
     tags = ['dimes_directory:{0}'.format(path)]
     resp = tsc.create(blob, unicode(blob), tags)
-    return HttpResponse(json.dumps(dict(uri=resp.uri)),
-                        content_type="application/json")
+    if request.is_ajax():
+        return HttpResponse(json.dumps(dict(fname=resp.fname, url=resp.uri)),
+                            content_type="application/json")
+    else:
+        return redirect(request.META['HTTP_REFERER'])
 
 
 def index(request):
