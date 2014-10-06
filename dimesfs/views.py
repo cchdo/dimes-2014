@@ -1,16 +1,45 @@
 import json
 import os
+import base64
 from collections import defaultdict
 
 from django.conf import settings
 from django.shortcuts import render, redirect
-from django.http import HttpResponse
+from django.http import HttpResponse, StreamingHttpResponse
 from django.views.decorators.csrf import csrf_exempt
+
+import requests
 
 from tagstore.client import TagStoreClient, Query
 
+secret = "66969bfac21f5dba5e3d" # 10 bytes
 
 tsc = TagStoreClient(settings.TS_API_ENDPOINT)
+
+#http://stackoverflow.com/a/2490718
+def encode(key, string):
+    encoded_chars = []
+    for i in xrange(len(string)):
+        key_c = key[i % len(key)]
+        encoded_c = chr(ord(string[i]) + ord(key_c) % 256)
+        encoded_chars.append(encoded_c)
+    encoded_string = "".join(encoded_chars)
+    return base64.urlsafe_b64encode(encoded_string)
+ 
+ 
+def decode(key, string):
+    decoded_chars = []
+    string = base64.urlsafe_b64decode(string)
+    for i in xrange(len(string)):
+        key_c = key[i % len(key)]
+        encoded_c = chr(abs(ord(string[i]) - ord(key_c) % 256))
+        decoded_chars.append(encoded_c)
+    decoded_string = "".join(decoded_chars)
+    return decoded_string
+
+
+def _path_from_json(string):
+    return "/" + "/".join(json.loads(string))
 
 
 def fslist(request):
@@ -27,8 +56,25 @@ def fslist(request):
     del fs_tree[""]
     return HttpResponse(json.dumps(fs_tree), content_type="application/json")
 
-def _path_from_json(string):
-    return "/" + "/".join(json.loads(string))
+
+def download(request, uri_frag):
+    uuid = decode(secret, str(uri_frag))
+    r = requests.get(settings.TS_API_ENDPOINT + "/ofs/" + uuid + "?as_attachment",
+            stream=True)
+    def get_ofs(r):
+        for l in r.iter_lines():
+            yield l
+    response = StreamingHttpResponse(get_ofs(r))
+    for header in r.headers:
+        response[header] = r.headers[header]
+    return response
+
+def ofs_to_dimes_uri(s):
+    base = "/dimesfs/download/" 
+    uuid = s.split("/")[-1]
+    uuid_hidden = encode(secret, uuid)
+    return base + uuid_hidden
+
 
 @csrf_exempt
 def dirflist(request):
@@ -36,7 +82,7 @@ def dirflist(request):
     if request.method == "POST":
         tag = "dimes_directory:" + _path_from_json(request.body)
         files = [d for d in tsc.query_data(Query.tags_any("eq", tag))]
-        fslist = [{"fname": f.fname, "url": f.uri} for f in files]
+        fslist = [{"fname": f.fname, "url": ofs_to_dimes_uri(f.uri)} for f in files]
     return HttpResponse(json.dumps(fslist), content_type="application/json")
 
 
