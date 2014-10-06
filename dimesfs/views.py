@@ -89,6 +89,31 @@ def dirflist(request):
     return HttpResponse(json.dumps(fslist), content_type="application/json")
 
 
+def rename(request):
+    """POST rename
+
+    Arguments: 
+        path to rename from 
+        path to rename to
+
+    """
+    if request.method == "POST":
+        path_from = _path_from_json(request.POST['path_from'])
+        path_to = _path_from_json(request.POST['path_to'])
+
+        dir_from = "dimes_directory:{0}".format(path_from)
+        dir_to = "dimes_directory:{0}".format(path_to)
+
+        tags = tsc.query_tags(["tag", "eq", dir_from])
+        for tag in tags:
+            tsc.edit_tag(tag.id, dir_to)
+        tags = tsc.query_tags(["tag", "like", dir_from + "/%"])
+        for tag in tags:
+            tsc.edit_tag(tag.id, tag.tag.replace(dir_from, dir_to, 1))
+        return HttpResponse(json.dumps(dict(status='ok')),
+                            content_type="application/json")
+
+
 def delete(request):
     """POST delete
 

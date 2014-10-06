@@ -80,7 +80,14 @@
       return tr;
     }
     function createRowDir(key) {
-      var tr = createRow(createIcon('folder-close'), key, '')
+      var accessories = $('<span class="pull-right"></span>');
+
+      var rename_button = $('<button type="button" class="btn btn-default btn-xs"></button>');
+      rename_button.append(createIcon('pencil'));
+      rename_button.click(function(event) { dimesfs_rename(this, key); return false;});
+      accessories.append(rename_button);
+
+      var tr = createRow(createIcon('folder-close'), key, accessories)
         .click(function () {dimesfs_cd(key);});
       return tr;
     }
@@ -169,6 +176,26 @@
       }
       var tr = createRowDir(dname);
       tbody.append(tr);
+    }
+    function dimesfs_rename(target, dname) {
+      var path_from = current_path.slice(0);
+      path_from.push(dname);
+      var path_to = current_path.slice(0);
+      path_to.push(prompt('New directory name'));
+      $.ajax({
+        type: "POST",
+        url: "/dimesfs/rename",
+        data: {
+          path_from: JSON.stringify(path_from),
+          path_to: JSON.stringify(path_to),
+          csrfmiddlewaretoken: $.cookie('csrftoken')
+        },
+        success: function(data) {
+          $(target).parents('tr').children('td:get(1)').html(data);
+        },
+        dataType: 'json',
+        async: false
+      });
     }
     function dimesfs_unzip(target, file) {
       $.ajax({
