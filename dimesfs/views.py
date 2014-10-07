@@ -60,6 +60,15 @@ def fslist(request):
     return HttpResponse(json.dumps(fs_tree), content_type="application/json")
 
 
+def _download_id_to_ofs_url(did):
+    uuid = decode(secret, str(did))
+    return tsc._api_endpoint("ofs", uuid)
+
+
+def _download_url_to_ofs_url(url):
+    return _download_id_to_ofs_url(url.split('/')[-1])
+
+
 # http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html
 HTTP_HOP_BY_HOP = set(['connection', 'keep-alive', 'proxy-authenticate',
                        'proxy-authorization', 'te', 'trailers',
@@ -67,8 +76,7 @@ HTTP_HOP_BY_HOP = set(['connection', 'keep-alive', 'proxy-authenticate',
 
 
 def download(request, uri_frag):
-    uuid = decode(secret, str(uri_frag))
-    url = tsc._api_endpoint("ofs", uuid)
+    url = _download_id_to_ofs_url(uri_frag)
     headers = {}
     as_attachment = False
     if as_attachment:
@@ -111,7 +119,7 @@ def rename(request):
     """
     if request.method == "POST":
         if request.POST['type'] == 'file':
-            uri = request.POST['uri']
+            uri = _download_url_to_ofs_url(request.POST['uri'])
             fname = request.POST['fname']
             data = tsc.query_data(['uri', 'eq', uri], limit=1, single=True)
             tsc.edit(data.id, data.uri, fname, data.tags)
@@ -141,10 +149,30 @@ def delete(request):
 
     """
     if request.method == "POST":
-        uri = request.POST['uri']
-        data = tsc.query_data(["uri", "eq", uri], limit=1, single=True)
-        if data:
-            resp = tsc.delete(data.id)
+        if request.POST['type'] == 'file':
+            uri = _download_url_to_ofs_url(request.POST['uri'])
+            data = tsc.query_data(["uri", "eq", uri], limit=1, single=True)
+            if data:
+                resp = tsc.delete(data.id)
+                return HttpResponse(json.dumps(dict(status='ok')),
+                            content_type="application/json")
+        elif request.POST['type'] == 'dir':
+            path = _path_from_json(request.POST['path'])
+            ddir = 'dimes_directory:{0}'.format(path)
+            ddir_recurse = '{0}/%'.format(ddir)
+            data = tsc.query_data(Query.tags_any('eq', ddir))
+            for datum in data:
+                tsc.delete(datum.id)
+            data = tsc.query_data(
+                Query.tags_any('like', ddir_recurse))
+            for datum in data:
+                tsc.delete(datum.id)
+            tags = tsc.query_tags(['tag', 'eq', ddir])
+            for tag in tags:
+                tsc.delete_tag(tag.id)
+            tags = tsc.query_tags(['tag', 'like', ddir_recurse])
+            for tag in tags:
+                tsc.delete_tag(tag.id)
             return HttpResponse(json.dumps(dict(status='ok')),
                         content_type="application/json")
     return HttpResponse(json.dumps(dict(status='failed')),
@@ -168,7 +196,7 @@ def upload(request):
 
 def unzip(request):
     if request.method == "POST":
-        uri = request.POST['uri']
+        uri = _download_url_to_ofs_url(request.POST['uri'])
         data = tsc.query_data(["uri", "eq", uri], limit=1, single=True)
 
         # make the new dimes directory, current dimes directory + zipname

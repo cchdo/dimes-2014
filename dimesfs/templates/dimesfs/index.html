@@ -76,7 +76,7 @@
 
       var delete_button = $('<button type="button" class="btn btn-default btn-xs"></button>');
       delete_button.append(createIcon('remove'));
-      delete_button.click(function() { dimesfs_del(this, file); });
+      delete_button.click(function() { dimesfs_del_file(this, file); });
       accessories.append(delete_button);
       var tr = createRow(
         createIcon('file'),
@@ -105,6 +105,11 @@
       rename_button.append(createIcon('pencil'));
       rename_button.click(function(event) { dimesfs_rename(this, key); return false;});
       accessories.append(rename_button);
+
+      var delete_button = $('<button type="button" class="btn btn-default btn-xs"></button>');
+      delete_button.append(createIcon('remove'));
+      delete_button.click(function() { dimesfs_del(this, key); return false; });
+      accessories.append(delete_button);
 
       var tr = createRow(createIcon('folder-close'), key, accessories)
         .click(function () { dimesfs_cd(getRowBodyItem($(this)).html());});
@@ -258,13 +263,36 @@
         async: false
       });
     }
-    function dimesfs_del(target, file) {
+    function dimesfs_del(target, dirname) {
+      var answer = confirm("Delete " + dirname + "?");
+      var path = current_path.slice(0);
+      path.push(dirname);
+      if (answer) {
+        $.ajax({
+          type: "POST",
+          url: "/dimesfs/delete",
+          data: {
+            type: 'dir',
+            path: JSON.stringify(path),
+            csrfmiddlewaretoken: $.cookie('csrftoken')
+          },
+          success: function(data){
+            if (data.status == "ok") {
+              $(target).parents('tr').hide('fast').remove();
+            }
+          },
+          dataType: 'json'
+        });
+      }
+    }
+    function dimesfs_del_file(target, file) {
       var answer = confirm("Delete " + file.fname + "?");
       if (answer) {
         $.ajax({
           type: "POST",
           url: "/dimesfs/delete",
           data: {
+            type: 'file',
             uri: file.url,
             csrfmiddlewaretoken: $.cookie('csrftoken')
           },
