@@ -60,15 +60,24 @@ def fslist(request):
     return HttpResponse(json.dumps(fs_tree), content_type="application/json")
 
 
+# http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html
+HTTP_HOP_BY_HOP = set(['connection', 'keep-alive', 'proxy-authenticate',
+                       'proxy-authorization', 'te', 'trailers',
+                       'transfer-encoding', 'upgrade', ])
+
+
 def download(request, uri_frag):
     uuid = decode(secret, str(uri_frag))
-    r = requests.get(settings.TS_API_ENDPOINT + "/ofs/" + uuid + "?as_attachment",
-            stream=True)
-    def get_ofs(r):
-        for l in r.iter_lines():
-            yield l
-    response = StreamingHttpResponse(get_ofs(r))
+    url = tsc._api_endpoint("ofs", uuid)
+    headers = {}
+    as_attachment = False
+    if as_attachment:
+        headers['X-As-Attachment'] = 'yes'
+    r = requests.get(url, headers=headers, stream=True)
+    response = StreamingHttpResponse(r.iter_content())
     for header in r.headers:
+        if header in HTTP_HOP_BY_HOP:
+            continue
         response[header] = r.headers[header]
     return response
 
