@@ -225,8 +225,7 @@
           fs[new_name] = fs[dname];
           delete fs[dname];
         },
-        dataType: 'json',
-        async: false
+        dataType: 'json'
       });
     }
     function dimesfs_rename_file(target, file) {
@@ -243,8 +242,7 @@
         success: function(data) {
           setRowBodyFromButton(target, fname);
         },
-        dataType: 'json',
-        async: false
+        dataType: 'json'
       });
     }
     function dimesfs_unzip(target, file) {
@@ -259,8 +257,7 @@
           var dname = data['dirname'];
           dimesfs_add_dir($(target).parents('tbody'), dname);
         },
-        dataType: 'json',
-        async: false
+        dataType: 'json'
       });
     }
     function dimesfs_del(target, dirname) {
@@ -301,8 +298,7 @@
               $(target).parents('tr').hide('fast').remove();
             }
           },
-          dataType: 'json',
-          async: false
+          dataType: 'json'
         });
       }
     }
