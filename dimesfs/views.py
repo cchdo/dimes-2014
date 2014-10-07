@@ -93,25 +93,36 @@ def rename(request):
     """POST rename
 
     Arguments: 
-        path to rename from 
-        path to rename to
+        path_from - path to rename from 
+        path to - path to rename to
+
+        data_id - data id to rename
+        fname - new name
 
     """
     if request.method == "POST":
-        path_from = _path_from_json(request.POST['path_from'])
-        path_to = _path_from_json(request.POST['path_to'])
+        if request.POST['type'] == 'file':
+            uri = request.POST['uri']
+            fname = request.POST['fname']
+            data = tsc.query_data(['uri', 'eq', uri], limit=1, single=True)
+            tsc.edit(data.id, data.uri, fname, data.tags)
+            return HttpResponse(json.dumps(dict(status='ok')),
+                                content_type="application/json")
+        elif request.POST['type'] == 'dir':
+            path_from = _path_from_json(request.POST['path_from'])
+            path_to = _path_from_json(request.POST['path_to'])
 
-        dir_from = "dimes_directory:{0}".format(path_from)
-        dir_to = "dimes_directory:{0}".format(path_to)
+            dir_from = "dimes_directory:{0}".format(path_from)
+            dir_to = "dimes_directory:{0}".format(path_to)
 
-        tags = tsc.query_tags(["tag", "eq", dir_from])
-        for tag in tags:
-            tsc.edit_tag(tag.id, dir_to)
-        tags = tsc.query_tags(["tag", "like", dir_from + "/%"])
-        for tag in tags:
-            tsc.edit_tag(tag.id, tag.tag.replace(dir_from, dir_to, 1))
-        return HttpResponse(json.dumps(dict(status='ok')),
-                            content_type="application/json")
+            tags = tsc.query_tags(["tag", "eq", dir_from])
+            for tag in tags:
+                tsc.edit_tag(tag.id, dir_to)
+            tags = tsc.query_tags(["tag", "like", dir_from + "/%"])
+            for tag in tags:
+                tsc.edit_tag(tag.id, tag.tag.replace(dir_from, dir_to, 1))
+            return HttpResponse(json.dumps(dict(status='ok')),
+                                content_type="application/json")
 
 
 def delete(request):
