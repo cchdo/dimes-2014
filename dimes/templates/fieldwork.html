@@ -1,18 +1,18 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="row">
 	<h1 class="text-left">Fieldwork</h1>
-	<h3 class="text-center">Fieldwork: Reports, Planning, Logistics, and Results</h3>
-	<div class="col-md-12">
 		<div class="panel-group" id="accordion">
+
 			<div class="panel panel-default">
 			    <div class="panel-heading">
 			    	<h4 class="panel-title">
-			        <a data-toggle="collapse" href="#US1"><b>US1</b> - R/V Revelle - 2009</a>
+			        <a data-toggle="collapse" href="#US1">{% block title %}<b>US1</b> - R/V Revelle - 2009{% endblock %}</a>
 			    	</h4>
 			    </div>
 				<div id="US1" class="panel-collapse collapse in">
 					<div class="panel-body">
+						<h4 class="text-center"><b>Planning and Logistics</b></h4>
+						<p>{% block summa %} Punta Arenas, Chile to Punta Arenas, Chile. DIMES Pacific sound source deployment, float release, tracer release.{% endblock %}</p>
 				     	<table class="table table-bordered table-condensed">
 					        <thead>
 						        <tr class="info">
@@ -31,10 +31,37 @@
 								</tr>
 					        </tbody>
 						</table>
-			       		Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.
+						<hr>
+						<div class="row">
+						<div class="col-md-4">
+						<h4 class="text-center"><b>Data</b></h4>
+			       			<ul>
+							  <li>Cras justo odio</li>
+							  <li>Dapibus ac facilisis in</li>
+							  <li>Morbi leo risus</li>
+							  <li>Porta ac consectetur ac</li>
+							  <li>Vestibulum at eros</li>
+							</ul>
+						</div>
+						<div class="col-md-4">
+			       		<h4 class="text-center"><b>Reports</b></h4>
+			       			<ul>
+							  <li>Cras justo odio</li>
+							  <li>Dapibus ac facilisis in</li>
+							  <li>Morbi leo risus</li>
+							  <li>Porta ac consectetur ac</li>
+							  <li>Vestibulum at eros</li>
+							</ul>
+						</div>
+						<div class="col-md-4">
+			       		<a href="/outreach#US1"><h4 class="text-center"><b>Outreach</b></h4></a>
+						</div>
+						</div>
 					</div>
 				</div>
 			</div>
+
+
 			<div class="panel panel-default">
 				<div class="panel-heading">
 					<h4 class="panel-title">
@@ -43,6 +70,7 @@
 				</div>
 				<div id="UK1" class="panel-collapse collapse">
 					<div class="panel-body">
+						<h4 class="text-center">Reports, Planning and Logistics</h4>
 				      	<table class="table table-bordered table-condensed">
 					        <thead>
 						        <tr class="info">
@@ -61,6 +89,7 @@
 								</tr>
 					        </tbody>
 						</table>
+						<h4 class="text-center">Results</h4>
 				        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.
 					</div>
 				</div>
@@ -158,7 +187,7 @@
 			<div class="panel panel-default">
 				<div class="panel-heading">
 					<h4 class="panel-title">
-					<a data-toggle="collapse" href="#US3"><b>US3</b> - Cruise Information</a>
+					<a data-toggle="collapse" href="#US3"><b>US3</b></a>
 					</h4>
 				</div>
 				<div id="US3" class="panel-collapse collapse">
@@ -248,7 +277,7 @@
 			<div class="panel panel-default">
 				<div class="panel-heading">
 					<h4 class="panel-title">
-					<a data-toggle="collapse" href="#US5"><b>US5</b> - Cruise Information</a>
+					<a data-toggle="collapse" href="#US5"><b>US5</b></a>
 					</h4>
 				</div>
 				<div id="US5" class="panel-collapse collapse">
@@ -278,7 +307,7 @@
 			<div class="panel panel-default">
 				<div class="panel-heading">
 					<h4 class="panel-title">
-					<a data-toggle="collapse" href="#UK5"><b>UK5</b> - Cruise Information</a>
+					<a data-toggle="collapse" href="#UK5"><b>UK5</b></a>
 					</h4>
 				</div>
 				<div id="UK5" class="panel-collapse collapse">
@@ -308,7 +337,7 @@
 			<div class="panel panel-default">
 				<div class="panel-heading">
 					<h4 class="panel-title">
-					<a data-toggle="collapse" href="#U2014"><b>UK2014</b> - RRS James Cook</a>
+					<a data-toggle="collapse" href="#UK2014"><b>UK2014</b> - RRS James Cook</a>
 					</h4>
 				</div>
 				<div id="UK2014" class="panel-collapse collapse">
@@ -336,6 +365,4 @@
 				</div>
 			</div>
 		</div>
-	</div> <!--column-->
-</div> <!--row-->
 {% endblock %}

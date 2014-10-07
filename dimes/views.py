@@ -33,8 +33,8 @@ def cruise_reports(request):
     return render_to_response('cruise_reports.html', {},
         context_instance=RequestContext(request))
 
-def media(request):
-    return render_to_response('media.html', {},
+def outreach(request):
+    return render_to_response('outreach.html', {},
         context_instance=RequestContext(request))
 
 def index(request):
