@@ -54,7 +54,7 @@
     }
     function createRow(icon, body, accessory) {
       var tr = $("<tr></tr>");
-      tr.append($('<td></td>').append(icon));
+      tr.append($('<td class="icon"></td>').append(icon));
       tr.append($('<td class="body"></td>').append(body));
       tr.append($('<td></td>').append(accessory));
       return tr;

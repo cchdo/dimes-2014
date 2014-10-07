@@ -10,3 +10,6 @@
 #fs_table .body {
   width: 50%;
 }
+#fs_table .icon {
+  vertical-align: middle;
+}
