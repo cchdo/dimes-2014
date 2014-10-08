@@ -44,19 +44,24 @@ def decode(key, string):
 def _path_from_json(string):
     return "/" + "/".join(json.loads(string))
 
-
 def fslist(request):
     Tree = lambda: defaultdict(Tree) # did you mean recursion?
     fs_tree = Tree()
-    fs_tags = tsc.query_tags(["tag", "like", "dimes_directory:%"])
+    if request.user.is_authenticated():
+        fs_tags = tsc.query_tags(["tag", "like", "dimes_directory:%"])
+    else:
+        fs_tags = tsc.query_tags(['tag', 'like', 'dimes_directory:%'],
+                  ['data', 'any', Query.tags_any('eq', 'privacy:public')])
     fs_taglist = [t for t in fs_tags]
+    print fs_taglist
     fs_pathlist = [t.tag.split(":")[1][1:].split("/") for t in fs_taglist]
     def add(tree, path):
         for node in path:
             tree = tree[node]
     for path in fs_pathlist:
         add(fs_tree, path)
-    del fs_tree[""]
+    if "" in fs_tree:
+        del fs_tree[""]
     return HttpResponse(json.dumps(fs_tree), content_type="application/json")
 
 
@@ -101,7 +106,12 @@ def dirflist(request):
     fslist=[]
     if request.method == "POST":
         tag = "dimes_directory:" + _path_from_json(request.body)
-        files = [d for d in tsc.query_data(Query.tags_any("eq", tag))]
+        if request.user.is_authenticated():
+            files = [d for d in tsc.query_data(Query.tags_any("eq", tag))]
+        else:
+            tsq = tsc.query_data(Query.tags_any("eq", tag),
+                                 Query.tags_any("eq", "privacy:public"))
+            files = [d for d in tsq]
         fslist = [{"fname": f.fname, "url": ofs_to_dimes_uri(f.uri)} for f in files]
     return HttpResponse(json.dumps(fslist), content_type="application/json")
 
