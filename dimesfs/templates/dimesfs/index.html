@@ -31,6 +31,7 @@
 
     var fs_struct;
     var current_path = [];
+    var dug_tree; // store a reference to the dug tree for mkdir
     if (window.location.hash == ""){
       window.location.hash = encodeURIComponent(JSON.stringify([])); 
     } else {
@@ -119,9 +120,17 @@
       var new_tbody = $('<tbody id="fs_table"></tbody>');
 
       // Change directory list item
-      var new_dir_form = $('<input type="text" class="form-control input-sm" placeholder="new directory">')
-        .blur(function() {dimesfs_cd($(this).val());});
-      var tr = createRow(createIcon('plus'), new_dir_form, '');
+      var new_dir_group = $('<div class="input-group"></div>');
+      var newdir_input = $('<input type="text" class="form-control input-sm" placeholder="new directory">');
+      var input_button_span = $('<span class="input-group-btn"></span>');
+      var create_button = $('<button class="btn btn-default btn-sm" type="button">Create Directory</button>');
+      create_button.click(function() {dimesfs_mkdir(newdir_input.val());});
+      // "submit" on 'enter' keyup
+      newdir_input.keyup(function(e) {if (e.keyCode == 13) {create_button.click()}});
+      input_button_span.append(create_button);
+      new_dir_group.append(newdir_input);
+      new_dir_group.append(input_button_span);
+      var tr = createRow(createIcon('plus'), new_dir_group, '');
       new_tbody.append(tr);
 
       // Upload files list item
@@ -161,7 +170,7 @@
         async:false
       });
 
-      var dug_tree = fs_struct;
+      dug_tree = fs_struct;
       for (var i=0; i< current_path.length; i++){
         var cd = current_path[i];
         if (dug_tree.hasOwnProperty(cd)){
@@ -301,6 +310,16 @@
           dataType: 'json'
         });
       }
+    }
+    function dimesfs_mkdir(dir_name){
+      if (dir_name.indexOf("..") == 0) { // don't start with ".."
+        return;
+      }
+      if (dir_name.indexOf("/") > -1){ // no "/" in the name
+        return;
+      }
+      dug_tree[dir_name] = {}; //yeah, it's that simple
+      set_table();
     }
     function dimesfs_cd(path){
       if (path == ".."){
