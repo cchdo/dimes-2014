@@ -156,6 +156,14 @@
       var tr = createRow(createIcon('upload'), new_upload_form, '');
       new_tbody.append(tr);
 
+      // Download directory list item
+      var download_zip_url = "/dimesfs/download_zip?path=" + JSON.stringify(current_path);
+      var download_form = $(
+          "<a href='" + download_zip_url + "' class=\"btn btn-default input-sm\">" +
+          'Download all directory files as zip</a>');
+      var tr = createRow(createIcon('download'), download_form, '');
+      new_tbody.append(tr);
+
       // Add list items for files and directories
       var files = [];
       parseHash();

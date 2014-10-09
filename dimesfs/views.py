@@ -4,7 +4,6 @@ import base64
 from collections import defaultdict
 from zipfile import ZipFile
 from tempfile import SpooledTemporaryFile
-from shutil import copyfileobj
 
 from django.conf import settings
 from django.shortcuts import render, redirect
@@ -14,6 +13,7 @@ from django.views.decorators.csrf import csrf_exempt
 import requests
 
 from tagstore.client import TagStoreClient, Query
+
 
 secret = "66969bfac21f5dba5e3d" # 10 bytes
 
@@ -80,6 +80,16 @@ HTTP_HOP_BY_HOP = set(['connection', 'keep-alive', 'proxy-authenticate',
                        'transfer-encoding', 'upgrade', ])
 
 
+def _proxy(response):
+    """Convert a requests response to a StreamingHttpResponse."""
+    resp = StreamingHttpResponse(response.iter_content())
+    for header in response.headers:
+        if header in HTTP_HOP_BY_HOP:
+            continue
+        resp[header] = response.headers[header]
+    return resp
+
+
 def download(request, uri_frag):
     url = _download_id_to_ofs_url(uri_frag)
     headers = {}
@@ -87,18 +97,58 @@ def download(request, uri_frag):
     if as_attachment:
         headers['X-As-Attachment'] = 'yes'
     r = requests.get(url, headers=headers, stream=True)
-    response = StreamingHttpResponse(r.iter_content())
-    for header in r.headers:
-        if header in HTTP_HOP_BY_HOP:
-            continue
-        response[header] = r.headers[header]
-    return response
+    return _proxy(r)
+
 
 def ofs_to_dimes_uri(s):
     base = "/dimesfs/download/" 
     uuid = s.split("/")[-1]
     uuid_hidden = encode(secret, uuid)
     return base + uuid_hidden
+
+
+def tag_value(data, key):
+    """Return the value for a tag key on a given data.
+
+    This gives no consideration for more than one tag having the same tag key.
+    It merely returns the first encountered.
+
+    Raises:
+        KeyError - if the tag key does not exist
+
+    """
+    prefix = '{0}:'.format(key)
+    for tag in data.tags:
+        if tag.startswith(prefix):
+            return tag[len(prefix):]
+    raise KeyError()
+
+
+def download_zip(request):
+    zdir = _path_from_json(request.GET.get('path'))
+    basedir = 'dimes_directory:{0}'.format(zdir)
+    sane_name = 'dimes{0}.zip'.format(zdir.replace('/', '-'))
+
+    data = list(tsc.query_data(Query.tags_any('eq', basedir)))
+    if zdir == '/':
+        subdirs = basedir + '%'
+    else:
+        subdirs = basedir + '/%'
+    data.extend(list(tsc.query_data(Query.tags_any('like', subdirs))))
+
+    data_arcnames = []
+    for datum in data:
+        fname = datum.fname
+        try:
+            arcname = os.path.join(tag_value(datum, 'dimes_directory'), fname)
+        except KeyError:
+            continue
+        data_arcnames.append((datum.id, arcname))
+
+    data = dict(data_arcnames=data_arcnames, fname=sane_name,
+                ofs_endpoint=tsc._api_endpoint('ofs'))
+    return _proxy(requests.post(tsc._api_endpoint('zip'),
+                                data=json.dumps(data), headers=tsc.headers_json))
 
 
 @csrf_exempt
