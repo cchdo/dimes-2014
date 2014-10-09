@@ -60,8 +60,10 @@ def fslist(request):
             tree = tree[node]
     for path in fs_pathlist:
         add(fs_tree, path)
-    if "" in fs_tree:
+    try:
         del fs_tree[""]
+    except KeyError:
+        pass
     return HttpResponse(json.dumps(fs_tree), content_type="application/json")
 
 
