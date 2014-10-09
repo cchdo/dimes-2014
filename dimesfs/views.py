@@ -73,7 +73,18 @@ def _download_id_to_ofs_url(did):
 
 
 def _download_url_to_ofs_url(url):
-    return _download_id_to_ofs_url(url.split('/')[-1])
+    if tsc._is_local(url):
+        return _download_id_to_ofs_url(url.split('/')[-1])
+    return url
+
+
+def ofs_to_dimes_uri(s):
+    if tsc._is_local(s):
+        base = "/dimesfs/download/" 
+        uuid = s.split("/")[-1]
+        uuid_hidden = encode(secret, uuid)
+        return base + uuid_hidden
+    return s
 
 
 # http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html
@@ -100,13 +111,6 @@ def download(request, uri_frag):
         headers['X-As-Attachment'] = 'yes'
     r = requests.get(url, headers=headers, stream=True)
     return _proxy(r)
-
-
-def ofs_to_dimes_uri(s):
-    base = "/dimesfs/download/" 
-    uuid = s.split("/")[-1]
-    uuid_hidden = encode(secret, uuid)
-    return base + uuid_hidden
 
 
 def tag_value(data, key):
