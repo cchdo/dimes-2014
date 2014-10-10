@@ -40,6 +40,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'dimesfs',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -95,3 +96,7 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 #    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
+
+LOGIN_REDIRECT_URL = '/'
+
+TS_API_ENDPOINT = "http://hdo.ucsd.edu:53000/api/v1"

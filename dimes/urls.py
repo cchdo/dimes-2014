@@ -3,7 +3,7 @@ from django.conf.urls import patterns, include, url
 from django.contrib import admin
 admin.autodiscover()
 
-from dimes import settings
+from django.conf import settings
 
 urlpatterns = patterns('',
     # Examples:
@@ -17,8 +17,13 @@ urlpatterns = patterns('',
     url(r'cruise_reports$', 'dimes.views.cruise_reports', name='cruise_reports'),
     url(r'media$', 'dimes.views.media', name='media'),
     url(r'outreach$', 'dimes.views.outreach', name='outreach'),
+    url(r'^dimesfs/', include('dimesfs.urls')),
     url(r'^$', 'dimes.views.index', name='index'),
     # url(r'^blog/', include('blog.urls')),
+
+    url(r'^login/$', 'django.contrib.auth.views.login', {
+        'template_name': 'login.html'}),
+    url(r'^logout/$', 'dimes.views.logout'),
 
     url(r'^admin/', include(admin.site.urls)),
 )
