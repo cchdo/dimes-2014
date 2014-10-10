@@ -20,6 +20,10 @@ urlpatterns = patterns('',
     url(r'^$', 'dimes.views.index', name='index'),
     # url(r'^blog/', include('blog.urls')),
 
+    url(r'^login/$', 'django.contrib.auth.views.login', {
+        'template_name': 'login.html'}),
+    url(r'^logout/$', 'dimes.views.logout'),
+
     url(r'^admin/', include(admin.site.urls)),
 )
 

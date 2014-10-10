@@ -97,4 +97,6 @@ STATICFILES_FINDERS = (
 #    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
+LOGIN_REDIRECT_URL = '/'
+
 TS_API_ENDPOINT = "http://hdo.ucsd.edu:53000/api/v1"
