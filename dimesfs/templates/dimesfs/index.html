@@ -116,15 +116,15 @@
     function createRowDir(key) {
       var accessories = $('<span class="pull-right"></span>');
 
-      var rename_button = $('<button type="button" class="btn btn-default btn-xs"></button>');
-      rename_button.append(createIcon('pencil'));
-      rename_button.click(function(event) { dimesfs_rename(this, key); return false;});
-      accessories.append(rename_button);
+      if (dimesfs.is_authenticated) {
+        var rename_button = createAccessoryButton('Rename', 'pencil');
+        rename_button.click(function(event) { dimesfs_rename(this, key); return false;});
+        accessories.append(rename_button);
 
-      var delete_button = $('<button type="button" class="btn btn-default btn-xs"></button>');
-      delete_button.append(createIcon('remove'));
-      delete_button.click(function() { dimesfs_del(this, key); return false; });
-      accessories.append(delete_button);
+        var delete_button = createAccessoryButton('Delete', 'remove');
+        delete_button.click(function() { dimesfs_del(this, key); return false; });
+        accessories.append(delete_button);
+      }
 
       var tr = createRow(createIcon('folder-close'), key, accessories)
         .click(function () { dimesfs_cd(getRowBodyItem($(this)).html());});
@@ -133,42 +133,44 @@
     function set_table(){
       var new_tbody = $('<tbody id="fs_table"></tbody>');
 
-      // Change directory list item
-      var new_dir_group = $('<div class="input-group"></div>');
-      var newdir_input = $('<input type="text" class="form-control input-sm" placeholder="new directory">');
-      var input_button_span = $('<span class="input-group-btn"></span>');
-      var create_button = $('<button class="btn btn-default btn-sm" type="button">Create Directory</button>');
-      create_button.click(function() {dimesfs_mkdir(newdir_input.val());});
-      // "submit" on 'enter' keyup
-      newdir_input.keyup(function(e) {if (e.keyCode == 13) {create_button.click()}});
-      input_button_span.append(create_button);
-      new_dir_group.append(newdir_input);
-      new_dir_group.append(input_button_span);
-      var tr = createRow(createIcon('plus'), new_dir_group, '');
-      new_tbody.append(tr);
+      if (dimesfs.is_authenticated) {
+        // Change directory list item
+        var new_dir_group = $('<div class="input-group"></div>');
+        var newdir_input = $('<input type="text" class="form-control input-sm" placeholder="new directory">');
+        var input_button_span = $('<span class="input-group-btn"></span>');
+        var create_button = $('<button class="btn btn-default btn-sm" type="button">Create Directory</button>');
+        create_button.click(function() {dimesfs_mkdir(newdir_input.val());});
+        // "submit" on 'enter' keyup
+        newdir_input.keyup(function(e) {if (e.keyCode == 13) {create_button.click()}});
+        input_button_span.append(create_button);
+        new_dir_group.append(newdir_input);
+        new_dir_group.append(input_button_span);
+        var tr = createRow(createIcon('plus'), new_dir_group, '');
+        new_tbody.append(tr);
 
-      // Upload files list item
-      var new_upload_form = $(
-          '<form class="dropzone" action="/dimesfs/upload" method="POST" enctype="multipart/form-data">'+
-          input_hidden("csrfmiddlewaretoken", $.cookie("csrftoken")) + 
-          input_hidden("path", JSON.stringify(current_path)) + 
-          '<div class="fallback input-group">' +
-          '<input type="file" name="file" class="form-control input-sm" multiple>' +
-          '<span class="input-group-btn">' +
-          '<input class="btn btn-default btn-sm" type="submit" value="Upload">' +
-          '</span>' +
-          '</div>' +
-        '</form>');
-      new_upload_form.dropzone({
-        //forceFallback: true
-        success: function(_, resp) {
-          files.push(resp);
-          var tr = createRowFile(resp);
-          new_tbody.append(tr);
-        }
-      });
-      var tr = createRow(createIcon('upload'), new_upload_form, '');
-      new_tbody.append(tr);
+        // Upload files list item
+        var new_upload_form = $(
+            '<form class="dropzone" action="/dimesfs/upload" method="POST" enctype="multipart/form-data">'+
+            input_hidden("csrfmiddlewaretoken", $.cookie("csrftoken")) + 
+            input_hidden("path", JSON.stringify(current_path)) + 
+            '<div class="fallback input-group">' +
+            '<input type="file" name="file" class="form-control input-sm" multiple>' +
+            '<span class="input-group-btn">' +
+            '<input class="btn btn-default btn-sm" type="submit" value="Upload">' +
+            '</span>' +
+            '</div>' +
+          '</form>');
+        new_upload_form.dropzone({
+          //forceFallback: true
+          success: function(_, resp) {
+            files.push(resp);
+            var tr = createRowFile(resp);
+            new_tbody.append(tr);
+          }
+        });
+        var tr = createRow(createIcon('upload'), new_upload_form, '');
+        new_tbody.append(tr);
+      }
 
       // Download directory list item
       var download_zip_url = "/dimesfs/download_zip?path=" + JSON.stringify(current_path);
