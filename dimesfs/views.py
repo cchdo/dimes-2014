@@ -71,18 +71,20 @@ def _download_id_to_ofs_url(did):
     return tsc._api_endpoint("ofs", uuid)
 
 
+DOWNLOAD_URI_BASE = '/dimesfs/download/'
+
+
 def _download_url_to_ofs_url(url):
-    if tsc._is_local(url):
+    if url.startswith(DOWNLOAD_URI_BASE):
         return _download_id_to_ofs_url(url.split('/')[-1])
     return url
 
 
 def ofs_to_dimes_uri(s):
     if tsc._is_local(s):
-        base = "/dimesfs/download/" 
         uuid = s.split("/")[-1]
         uuid_hidden = encode(secret, uuid)
-        return base + uuid_hidden
+        return DOWNLOAD_URI_BASE + uuid_hidden
     return s
 
 
@@ -134,12 +136,16 @@ def download_zip(request):
     basedir = 'dimes_directory:{0}'.format(zdir)
     sane_name = 'dimes{0}.zip'.format(zdir.replace('/', '-'))
 
-    data = list(tsc.query_data(Query.tags_any('eq', basedir)))
+    filters = []
+    if not request.user.is_authenticated():
+        filters.append(Query.tags_any("eq", "privacy:public"))
+
+    data = list(tsc.query_data(Query.tags_any('eq', basedir), *filters))
     if zdir == '/':
         subdirs = basedir + '%'
     else:
         subdirs = basedir + '/%'
-    data.extend(list(tsc.query_data(Query.tags_any('like', subdirs))))
+    data.extend(list(tsc.query_data(Query.tags_any('like', subdirs), *filters)))
 
     data_arcnames = []
     for datum in data:
@@ -167,7 +173,17 @@ def dirflist(request):
             tsq = tsc.query_data(Query.tags_any("eq", tag),
                                  Query.tags_any("eq", "privacy:public"))
             files = [d for d in tsq]
-        fslist = [{"fname": f.fname, "url": ofs_to_dimes_uri(f.uri)} for f in files]
+        fslist = []
+        for fff in files:
+            try:
+                privacy = tag_value(fff, 'privacy')
+            except KeyError:
+                privacy = 'dimes'
+            fslist.append({
+                "fname": fff.fname,
+                "url": ofs_to_dimes_uri(fff.uri),
+                "privacy": privacy,
+            })
     return HttpResponse(json.dumps(fslist), content_type="application/json")
 
 
