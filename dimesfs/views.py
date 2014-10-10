@@ -53,7 +53,6 @@ def fslist(request):
         fs_tags = tsc.query_tags(['tag', 'like', 'dimes_directory:%'],
                   ['data', 'any', Query.tags_any('eq', 'privacy:public')])
     fs_taglist = [t for t in fs_tags]
-    print fs_taglist
     fs_pathlist = [t.tag.split(":")[1][1:].split("/") for t in fs_taglist]
     def add(tree, path):
         for node in path:
@@ -292,6 +291,31 @@ def unzip(request):
                     with zfile.open(info) as fobj:
                         tsc.create(fobj, fname, tags)
         return HttpResponse(json.dumps(dict(dirname=zipdirname)),
+                            content_type="application/json")
+
+
+def toggle_privacy(request):
+    if not request.user.is_authenticated():
+        return HttpResponseForbidden()
+    if request.method == "POST":
+        uri = _download_url_to_ofs_url(request.POST['uri'])
+        data = tsc.query_data(['uri', 'eq', uri], limit=1, single=True)
+        try:
+            privacy = tag_value(data, 'privacy')
+        except KeyError:
+            tsc.edit(data.id, tags=data.tags + ['privacy:public'])
+            state = 'public'
+        else:
+            if privacy == 'public':
+                oldtag = 'privacy:public'
+                newtag = 'privacy:dimes'
+                state = 'dimes'
+            else:
+                oldtag = 'privacy:dimes'
+                newtag = 'privacy:public'
+                state = 'public'
+            tsc.swap_tags(oldtag, newtag, ['id', 'eq', data.id])
+        return HttpResponse(json.dumps(dict(privacy=state)),
                             content_type="application/json")
 
 

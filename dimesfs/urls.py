@@ -12,6 +12,7 @@ urlpatterns = patterns('',
         url(r'download/(?P<uri_frag>.+)$', views.download, name='download'),
         url(r'download_zip$', views.download_zip, name='download_zip'),
         url(r'unzip$', views.unzip, name='unzip'),
+        url(r'toggle_privacy$', views.toggle_privacy, name='toggle_privacy'),
         url(r'^$', views.index, name='index'),
         )
 

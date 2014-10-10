@@ -13,3 +13,6 @@
 #fs_table .icon {
   vertical-align: middle;
 }
+#fs_table tr.private {
+  background-color: #dddddd;
+}

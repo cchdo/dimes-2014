@@ -29,6 +29,9 @@
     <script>
     Dropzone.autoDiscover = false;
 
+    var dimesfs = {};
+    dimesfs.is_authenticated = {% if user.is_authenticated %}true{% else %}false{% endif %};
+
     var fs_struct;
     var current_path = [];
     var dug_tree; // store a reference to the dug tree for mkdir
@@ -62,27 +65,38 @@
     function input_hidden(name, value) {
       return '<input type="hidden" name="' + name + "\" value='" + value + "'>";
     }
+    function createAccessoryButton(title, glyph) {
+      var button = $('<button type="button" class="btn btn-default btn-xs" title="' + title + '"></button>');
+      button.append(createIcon(glyph));
+      return button;
+    }
     function createRowFile(file) {
       var accessories = $('<span class="pull-right"></span>');
-      if (file.fname.slice(-4) == ".zip") {
-        var unzip_button = $('<button type="button" class="btn btn-default btn-xs"></button>');
-        unzip_button.append(createIcon('gift'));
-        unzip_button.click(function() { dimesfs_unzip(this, file); });
-        accessories.append(unzip_button);
-      }
-      var rename_button = $('<button type="button" class="btn btn-default btn-xs"></button>');
-      rename_button.append(createIcon('pencil'));
-      rename_button.click(function(event) { dimesfs_rename_file(this, file); return false;});
-      accessories.append(rename_button);
+      if (dimesfs.is_authenticated) {
+        if (file.fname.slice(-4) == ".zip") {
+          var unzip_button = createAccessoryButton('Unzip', 'gift');
+          unzip_button.click(function() { dimesfs_unzip(this, file); });
+          accessories.append(unzip_button);
+        }
+        var privacy_button = createAccessoryButton("", "");
+        privacy_button.click(function () {dimesfs_toggle_privacy(this, file);});
+        accessories.append(privacy_button);
 
-      var delete_button = $('<button type="button" class="btn btn-default btn-xs"></button>');
-      delete_button.append(createIcon('remove'));
-      delete_button.click(function() { dimesfs_del_file(this, file); });
-      accessories.append(delete_button);
+        var rename_button = createAccessoryButton('Rename', 'pencil');
+        rename_button.click(function(event) { dimesfs_rename_file(this, file); return false;});
+        accessories.append(rename_button);
+
+        var delete_button = createAccessoryButton('Delete', 'remove');
+        delete_button.click(function() { dimesfs_del_file(this, file); });
+        accessories.append(delete_button);
+      }
       var tr = createRow(
         createIcon('file'),
         $('<a href="' + file.url + '">' + file.fname + '</a>'),
         accessories);
+      if (dimesfs.is_authenticated) {
+        dimesfs_set_privacy_button(privacy_button, file.privacy == 'public')
+      }
       return tr;
     }
     function getRowBodyItem(row) {
@@ -318,6 +332,46 @@
           dataType: 'json'
         });
       }
+    }
+    function dimesfs_set_privacy_button(btn, public) {
+      var title = "Make public";
+      var remove_class = "eye-close";
+      var add_class = "eye-open";
+      if (public) {
+        title = "Make private";
+        remove_class = "eye-open";
+        add_class = "eye-close";
+      }
+      btn.attr('title', title);
+      var row = btn.parents('tr');
+      if (public) {
+        row.removeClass('private');
+      } else {
+        row.addClass('private');
+      }
+      $('span', btn)
+        .removeClass('glyphicon-' + remove_class)
+        .addClass('glyphicon-' + add_class);
+    }
+    function dimesfs_toggle_privacy(target, file) {
+      var btn = $(target);
+      btn.prop('disabled', true);
+
+      $.ajax({
+        type: "POST",
+        url: "/dimesfs/toggle_privacy",
+        data: {
+          type: 'file',
+          uri: file.url,
+          csrfmiddlewaretoken: $.cookie('csrftoken')
+        },
+        success: function(data) {
+          dimesfs_set_privacy_button(btn, data.privacy == 'public');
+          btn.prop('disabled', false);
+        },
+        dataType: 'json'
+      });
+
     }
     function dimesfs_mkdir(dir_name){
       if (dir_name.indexOf("..") == 0) { // don't start with ".."
