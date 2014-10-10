@@ -5,9 +5,12 @@ from collections import defaultdict
 from zipfile import ZipFile
 from tempfile import SpooledTemporaryFile
 
+from django.core.urlresolvers import reverse
 from django.conf import settings
 from django.shortcuts import render, redirect
-from django.http import HttpResponse, StreamingHttpResponse, Http404
+from django.http import (
+    HttpResponse, StreamingHttpResponse, Http404, 
+)
 from django.views.decorators.csrf import csrf_exempt
 
 import requests
@@ -198,6 +201,8 @@ def rename(request):
         fname - new name
 
     """
+    if not request.user.is_authenticated():
+        return redirect(reverse('login'))
     if request.method == "POST":
         if request.POST['type'] == 'file':
             uri = _download_url_to_ofs_url(request.POST['uri'])
@@ -229,6 +234,8 @@ def delete(request):
     body should be the uri of the file to delete.
 
     """
+    if not request.user.is_authenticated():
+        return redirect(reverse('login'))
     if request.method == "POST":
         if request.POST['type'] == 'file':
             uri = _download_url_to_ofs_url(request.POST['uri'])
@@ -261,6 +268,8 @@ def delete(request):
 
 
 def upload(request):
+    if not request.user.is_authenticated():
+        return redirect(reverse('login'))
     path = _path_from_json(request.POST['path'])
     blob = request.FILES['file']
     path = os.path.normpath(path)
@@ -276,6 +285,8 @@ def upload(request):
 
 
 def unzip(request):
+    if not request.user.is_authenticated():
+        return redirect(reverse('login'))
     if request.method == "POST":
         uri = _download_url_to_ofs_url(request.POST['uri'])
         data = tsc.query_data(["uri", "eq", uri], limit=1, single=True)
@@ -312,7 +323,7 @@ def unzip(request):
 
 def toggle_privacy(request):
     if not request.user.is_authenticated():
-        return HttpResponseForbidden()
+        return redirect(reverse('login'))
     if request.method == "POST":
         uri = _download_url_to_ofs_url(request.POST['uri'])
         data = tsc.query_data(['uri', 'eq', uri], limit=1, single=True)

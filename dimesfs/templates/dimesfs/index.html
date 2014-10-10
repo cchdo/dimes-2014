@@ -133,7 +133,14 @@
     function set_table(){
       var new_tbody = $('<tbody id="fs_table"></tbody>');
 
+      if (!dimesfs.is_authenticated) {
+        // Login list item
+        var login = $('<div><a href="/login">Login</a> to see non-public data.</div>');
+        var tr = createRow(createIcon('lock'), login, '');
+        new_tbody.append(tr);
+      }
       if (dimesfs.is_authenticated) {
+
         // Change directory list item
         var new_dir_group = $('<div class="input-group"></div>');
         var newdir_input = $('<input type="text" class="form-control input-sm" placeholder="new directory">');
