@@ -11,32 +11,53 @@
 <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
 <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:300,600' rel='stylesheet' type='text/css'>
 <style>
+    .navbar .container-fluid {
+      text-align: center;
+    }
     .navbar-nav {
       width: 100%;
       text-align: center;
-      margin: 20px;
     }
     .navbar-nav>li {
       float: none;
       display: inline-block;
     }
-    .navbar-nav>li>a {
+    .navbar-nav a {
       color: #777;
       font-size: 1.2em;
-      font-weight: 100;
+    }
+    .navbar .navbar-logo {
+      margin-top: 1em;
+      text-align: center;;
+    }
+    .navbar .navbar-logo p {
+      display: inline-block;
+      font-size: 1.1em;
+      margin-left: 1em;
     }
     body { 
-      padding-bottom: 100px;
       font-family: 'Source Sans Pro',sans-serif; 
       background-color: #DBEEF2;
       color:#565656;
     }
-    footer {
-      padding-top: 10px;
+    /* http://ryanfait.com/resources/footer-stick-to-bottom-of-page/ */
+    html, body {
+      height: 100%;
+    }
+    .wrapper {
+      min-height: 100%;
+      height: auto !important;
+      height: 100%;
+      margin: 0 auto -5em;
+    }
+    .footer-push, footer {
       color: #777;
       text-align: center;
+      height: 5em;
     }
-    footer>nav{
+    footer .navbar {
+      padding-bottom: 1em;
+      margin-bottom: 0;
       background-color: #F2F3F4;
     }
     .nowrap {
@@ -48,49 +69,65 @@
   </style>
   </head>
   <body>
-  <nav class="navbar navbar-default" role="navigation">
-    <div class="container">
-      <ul class="nav navbar-nav">
-        <li><a href="/">Home</a></li>
-        <li><a href="/fieldwork">Fieldwork</a></li>
-        <li><a href="/components">Components</a></li>
-        <li><a href="/cruise_reports">Cruise Reports</a></li>
-        <li><img src="/static/dimes_logo4.gif" width="120px"></li>
-        <li><a href="/outreach">Outreach</a></li>
-        <li><a href="/people">People</a></li>
-        <li><a href="/publications">Publications</a></li>
-        <li><a href="/data">Data</a></li>
-      </ul>
-    </div>
-  </nav>
-
-  <content>
-  <div class="container">
-    {% block content %}{% endblock %}
-  </div>
-  </content>
-
-  <footer>
-    <nav class="navbar navbar-fixed-bottom" role="navigation">
-      <div class="container nowrap">
-        <div class="row">
-          <div class="col-xs-12">
-            <ul class="nav nav-pills navbar-nav" style ="margin:0px;">
-              <li><a href="http://nsf.gov"><img alt="Nsf_logo" height="30" src="http://dimes.ucsd.edu/images/nsf_logo.gif"></a></li>
-              <li><a href="http://www.nerc.ac.uk"><img alt="Ner_logo" height="30" src="http://dimes.ucsd.edu/images/ner_logo.gif"></a></li>
-              <li><a href="http://www.antarctica.ac.uk"><img alt="Bas_logo" height="30" src="http://dimes.ucsd.edu/images/bas_logo.gif"></a></li>
-              <li><a href="http://www.clivar.org"><img alt="Clivar_logo" height="30" src="http://dimes.ucsd.edu/images/clivar_logo.png"></a></li>
-            </ul>
-          </div>
+  <div class="wrapper">
+    <nav class="navbar navbar-default" role="navigation">
+      <div class="container-fluid">
+        <div class="navbar-logo">
+          <a href="/"><img src="/static/images/logos/dimes_logo4.gif" width="120px" id="logo"></a>
+          <p>Diapycnal and Isopycnal Mixing Experiment in the Southern Ocean</p>
         </div>
-        <div class="row">
-          <div class="col-xs-12">
-            <small>Dimes is sponsored by the National Science Foundation (U.S.), Natural Environment Research Council (U.K), and British Antarctic Survey (U.K.)</small>
-          </div>
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#collapsed-nav">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+        </div>
+        <div class="collapse navbar-collapse" id="collapsed-nav">
+          <ul class="nav navbar-nav">
+            <li><a href="/">Home</a></li>
+            <li><a href="/fieldwork">Fieldwork</a></li>
+            <li><a href="/components">Components</a></li>
+            <li><a href="/cruise_reports">Cruise Reports</a></li>
+            <li><a href="/outreach">Outreach</a></li>
+            <li><a href="/people">People</a></li>
+            <li><a href="/publications">Publications</a></li>
+            <li><a href="/data">Data</a></li>
+          </ul>
         </div>
       </div>
     </nav>
-  </footer>
+
+    <content>
+    <div class="container">
+      {% block content %}{% endblock %}
+    </div>
+    </content>
+    <div class="footer-push"></div>
+  </div>
+
+    <footer>
+      <nav class="navbar" role="navigation">
+        <div class="container nowrap">
+          <div class="row">
+            <div class="col-xs-12">
+              <ul class="nav nav-pills navbar-nav" style ="margin:0px;">
+                <li><a href="http://nsf.gov"><img alt="Nsf_logo" height="30" src="/static/images/logos/nsf_logo.gif"></a></li>
+                <li><a href="http://www.nerc.ac.uk"><img alt="Ner_logo" height="30" src="/static/images/logos/ner_logo.gif"></a></li>
+                <li><a href="http://www.antarctica.ac.uk"><img alt="Bas_logo" height="30" src="/static/images/logos/bas_logo.gif"></a></li>
+                <li><a href="http://www.clivar.org"><img alt="Clivar_logo" height="30" src="/static/images/logos/clivar_logo.png"></a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-xs-12">
+              <small>DIMES is sponsored by the National Science Foundation (U.S.), Natural Environment Research Council (U.K), and British Antarctic Survey (U.K.)</small>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </footer>
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
