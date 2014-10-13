@@ -10,6 +10,7 @@
 <!-- Optional theme -->
 <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
 <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:300,600' rel='stylesheet' type='text/css'>
+{% block links %}{% endblock %}
 <style>
     .navbar .container-fluid {
       text-align: center;
@@ -134,5 +135,6 @@
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <!-- Latest compiled and minified JavaScript -->
     <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.js"></script>
+    {% block scripts %}{% endblock %}
   </body>
 </html>

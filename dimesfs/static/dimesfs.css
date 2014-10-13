@@ -13,6 +13,18 @@
 #fs_table .icon {
   vertical-align: middle;
 }
+#fs_table .accessories {
+  width: 10em;
+}
 #fs_table tr.private {
   background-color: #dddddd;
+}
+.fs_table {
+  padding: 0 0.8em;
+  margin-right: 0;
+  margin-left: 0;
+  background-color: #fff;
+  border-color: #ddd;
+  border-width: 1px;
+  border-radius: 4px 4px 0 0;
 }
