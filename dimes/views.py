@@ -28,8 +28,9 @@ def cruise_page(request, page_for=""):
     #do stuff with those data...
     files = []
 
-    return render_to_response('cruise_page.html', {"files":files, "page_for":page_for},
-        context_instance=RequestContext(request))
+    return render_to_response('cruise_page.html',
+                              {"files": files, "page_for": page_for},
+                              context_instance=RequestContext(request))
 
 def cruise_reports(request):
     return render_to_response('cruise_reports.html', {},

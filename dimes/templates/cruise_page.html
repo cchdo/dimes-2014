@@ -3,20 +3,21 @@
 <div class="row">
 	<h1>{{page_for}} Cruise Data</h1>
 		<table class="table table-bordered table-condensed">
-<thead>
+      <thead>
 			<tr class="active">
 				<th>Data Type</th>
 				<th>Files</th>
 			</tr>
-</thead>
-<tbody>
-{% for dt in files %}
-			<tr class="active">
-				<td>{{dt.dtype}}</td>
-				<td>{{dt.file}}</td>
-			</tr>
-{% endfor %}
-</tbody>
-		</table>
-	<div class="row">
+      </thead>
+      <tbody>
+      {% for dt in files %}
+        <tr class="active">
+          <td>{{dt.dtype}}</td>
+          {# maybe have multiple files for each data type#}
+          <td>{{dt.file}}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+</div>
 {% endblock %}
