@@ -1,10 +1,13 @@
 import os
 import csv
+import logging
+
+from dimesfs.views import PATH_TAG_PREFIX
 
 from tagstore.client import TagStoreClient
 
-TS_ENDPOINT = 'http://umi.local:5000/api/v1'
-DIMES_FS_PATH = "old_data" #path to dir with all the numbered dirs in it
+TS_ENDPOINT = 'http://sui.ucsd.edu:5000/api/v1'
+DIMES_FS_PATH = "/Users/myshen/Sites/dimes/datafiles/0000" #path to dir with all the numbered dirs in it
 DIMES_DB_CSV = "dimes_production.csv"
 """
 This only import the following attrs:
@@ -18,7 +21,7 @@ The following attrs are ignored:
     description
 
 Procedure is as follows:
-    1) Dump the dimes_produciton.uploads table to CSV
+    1) Dump the dimes_production.uploads table to CSV
        this parser expects the first line to be the column headers
        set DIMES_DB_CSV to the path to this dump
 
@@ -43,7 +46,12 @@ def get_df_path(d):
 
 
 def main():
+    logging.basicConfig()
+    log = logging.getLogger(__name__)
+    log.setLevel(logging.DEBUG)
+
     data = []
+    log.info("reading data")
     with open(DIMES_DB_CSV, 'rb') as csvfile:
         reader = csv.reader(csvfile, delimiter=',', quotechar='"', escapechar="\\",
                 doublequote=False)
@@ -60,13 +68,13 @@ def main():
     
     cli = TagStoreClient(TS_ENDPOINT)
     
-    
+    log.info("importing")
     for d in data:
         if not d['deleted']:
             base_tags = [
                 u'website:dimes',
                 ]
-            dir_tag = u'dimes_directory:{0}'.format(d['directory'])
+            dir_tag = u'{0}:{1}'.format(PATH_TAG_PREFIX, d['directory'])
             base_tags.append(dir_tag)
             fname = d['filename']
             if not d['public']:
@@ -76,7 +84,9 @@ def main():
             base_tags.append(privacy)
     
             with open(get_df_path(d), 'rb') as df:
+                log.debug('{0}/{1}'.format(d['directory'], fname))
                 cli.create(df, fname=fname, tags=base_tags)
+    log.info("done")
 
 if __name__ == "__main__":
     main()

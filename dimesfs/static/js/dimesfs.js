@@ -109,11 +109,11 @@ function set_table(){
   }
   if (dimesfs.is_authenticated) {
 
-    // Change directory list item
+    // Change path list item
     var new_dir_group = $('<div class="input-group"></div>');
-    var newdir_input = $('<input type="text" class="form-control input-sm" placeholder="new directory">');
+    var newdir_input = $('<input type="text" class="form-control input-sm" placeholder="new path">');
     var input_button_span = $('<span class="input-group-btn"></span>');
-    var create_button = $('<button class="btn btn-default btn-sm" type="button">Create Directory</button>');
+    var create_button = $('<button class="btn btn-default btn-sm" type="button">Create Path</button>');
     create_button.click(function() {dimesfs_mkdir(newdir_input.val());});
     // "submit" on 'enter' keyup
     newdir_input.keyup(function(e) {if (e.keyCode == 13) {create_button.click()}});
@@ -147,11 +147,11 @@ function set_table(){
     new_tbody.append(tr);
   }
 
-  // Download directory list item
+  // Download path list item
   var download_zip_url = "/dimesfs/download_zip?path=" + JSON.stringify(current_path);
   var download_form = $(
       "<a href='" + download_zip_url + "' class=\"btn btn-default input-sm\">" +
-      'Download all directory files as zip</a>');
+      'Download all path files as zip</a>');
   var tr = createRow(createIcon('download'), download_form, '');
   new_tbody.append(tr);
 
@@ -213,7 +213,7 @@ function dimesfs_rename(target, dname) {
   var path_from = current_path.slice(0);
   path_from.push(dname);
   var path_to = current_path.slice(0);
-  var new_name = prompt('New directory name', dname);
+  var new_name = prompt('New path name', dname);
   path_to.push(new_name);
   $.ajax({
     type: "POST",

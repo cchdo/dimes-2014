@@ -22,6 +22,9 @@ secret = "66969bfac21f5dba5e3d" # 10 bytes
 
 tsc = TagStoreClient(settings.TS_API_ENDPOINT)
 
+TAG_WEBSITE = "website:dimes"
+TAG_PATH_PREFIX = 'path:dimes'
+
 #http://stackoverflow.com/a/2490718
 def encode(key, string):
     encoded_chars = []
@@ -44,19 +47,21 @@ def decode(key, string):
     return decoded_string
 
 
+def _path_dimes(path):
+    return '{0}:{1}'.format(TAG_PATH_PREFIX, path)
+
+
 def _path_from_json(string):
     return "/" + "/".join(json.loads(string))
 
 def fslist(request):
     Tree = lambda: defaultdict(Tree) # did you mean recursion?
     fs_tree = Tree()
-    if request.user.is_authenticated():
-        fs_tags = tsc.query_tags(["tag", "like", "dimes_directory:%"])
-    else:
-        fs_tags = tsc.query_tags(['tag', 'like', 'dimes_directory:%'],
-                  ['data', 'any', Query.tags_any('eq', 'privacy:public')])
-    fs_taglist = [t for t in fs_tags]
-    fs_pathlist = [t.tag.split(":")[1][1:].split("/") for t in fs_taglist]
+    filters = [["tag", "like", _path_dimes("%")]]
+    if not request.user.is_authenticated():
+        filters.append(["data", "any", Query.tags_any("eq", "privacy:public")])
+    fs_tags = tsc.query_tags(*filters, preload=True)
+    fs_pathlist = [t.tag.split(":")[2][1:].split("/") for t in fs_tags]
     def add(tree, path):
         for node in path:
             tree = tree[node]
@@ -136,7 +141,7 @@ def tag_value(data, key):
 
 def download_zip(request):
     zdir = _path_from_json(request.GET.get('path'))
-    basedir = 'dimes_directory:{0}'.format(zdir)
+    basedir = _path_dimes(zdir)
     sane_name = 'dimes{0}.zip'.format(zdir.replace('/', '-'))
 
     filters = []
@@ -154,7 +159,7 @@ def download_zip(request):
     for datum in data:
         fname = datum.fname
         try:
-            arcname = os.path.join(tag_value(datum, 'dimes_directory'), fname)
+            arcname = os.path.join(tag_value(datum, TAG_PATH_PREFIX), fname)
         except KeyError:
             continue
         data_arcnames.append((datum.id, arcname))
@@ -169,7 +174,7 @@ def download_zip(request):
 def dirflist(request):
     fslist=[]
     if request.method == "POST":
-        tag = "dimes_directory:" + _path_from_json(request.body)
+        tag = _path_dimes(_path_from_json(request.body))
         if request.user.is_authenticated():
             files = [d for d in tsc.query_data(Query.tags_any("eq", tag))]
         else:
@@ -208,15 +213,15 @@ def rename(request):
             uri = _download_url_to_ofs_url(request.POST['uri'])
             fname = request.POST['fname']
             data = tsc.query_data(['uri', 'eq', uri], limit=1, single=True)
-            tsc.edit(data.id, data.uri, fname, data.tags)
+            tsc.edit(data.id, fname=fname)
             return HttpResponse(json.dumps(dict(status='ok')),
                                 content_type="application/json")
         elif request.POST['type'] == 'dir':
             path_from = _path_from_json(request.POST['path_from'])
             path_to = _path_from_json(request.POST['path_to'])
 
-            dir_from = "dimes_directory:{0}".format(path_from)
-            dir_to = "dimes_directory:{0}".format(path_to)
+            dir_from = _path_dimes(path_from)
+            dir_to = _path_dimes(path_to)
 
             tags = tsc.query_tags(["tag", "eq", dir_from])
             for tag in tags:
@@ -246,7 +251,7 @@ def delete(request):
                             content_type="application/json")
         elif request.POST['type'] == 'dir':
             path = _path_from_json(request.POST['path'])
-            ddir = 'dimes_directory:{0}'.format(path)
+            ddir = _path_dimes(path)
             ddir_recurse = '{0}/%'.format(ddir)
             data = tsc.query_data(Query.tags_any('eq', ddir))
             for datum in data:
@@ -275,7 +280,7 @@ def upload(request):
     path = os.path.normpath(path)
     if path == '.':
         path = ''
-    tags = ['dimes_directory:{0}'.format(path)]
+        tags = [TAG_WEBSITE, 'privacy:dimes', _path_dimes(path)]
     resp = tsc.create(blob, unicode(blob), tags)
     if request.is_ajax():
         return HttpResponse(json.dumps(dict(fname=resp.fname, url=resp.uri)),
@@ -291,11 +296,12 @@ def unzip(request):
         uri = _download_url_to_ofs_url(request.POST['uri'])
         data = tsc.query_data(["uri", "eq", uri], limit=1, single=True)
 
-        # make the new dimes directory, current dimes directory + zipname
+        # make the new path tag, current path + zipname
         old_dir = [tag for tag in data.tags if
-                   tag.startswith('dimes_directory:')]
+                   tag.startswith(TAG_PATH_PREFIX + ':')]
+        # Copy the old tags minus the path tag
         tags = [tag for tag in data.tags if not
-                tag.startswith('dimes_directory:')]
+                tag.startswith(TAG_PATH_PREFIX + ':')]
         if not old_dir:
             raise Http404()
         old_dir = old_dir[0].split(':')[1]
@@ -303,7 +309,7 @@ def unzip(request):
         new_dir = os.path.join(old_dir, zipdirname)
 
         # put the new tag onto the old tags
-        dir_tag = 'dimes_directory:{0}'.format(new_dir)
+        dir_tag = _path_dimes(new_dir)
         tags.append(dir_tag)
 
         fobj = data.open()
