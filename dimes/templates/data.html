@@ -2,25 +2,25 @@
 {% block content %}
 <div class="row">
   <h1>Data by Cruise</h1>
-  <a href="/cruise_data/data_policy">Data Policy</a>
+  <p><strong><a href="{% url 'data_policy' %}">Data Policy</a></strong></p>
   <p>Click a cruise below to access its data.</p>
 </div>
 <div class="col-md-6">
 	<ul class="list-group">
-		<a href="/cruise_data/US1" class="list-group-item"><b>US1</b> - R/V Revelle - 2009</a>
-		<a href="/cruise_data/UK1" class="list-group-item"><b>UK1</b> - James Cook - 2009</a>
-		<a href="/cruise_data/US2" class="list-group-item"><b>US2</b> - R/V Thompson - 2010</a>
-		<a href="/cruise_data/UK2" class="list-group-item"><b>UK2</b> - James Clark Ross - 2010-2011</a>
-		<a href="/cruise_data/US3" class="list-group-item"><b>US3</b></a>
+    <a href="{% url 'cruise_data' 'US1' %}" class="list-group-item"><b>US1</b> - R/V Revelle - 2009</a>
+    <a href="{% url 'cruise_data' 'UK1' %}" class="list-group-item"><b>UK1</b> - James Cook - 2009</a>
+		<a href="{% url 'cruise_data' 'US2' %}" class="list-group-item"><b>US2</b> - R/V Thompson - 2010</a>
+		<a href="{% url 'cruise_data' 'UK2' %}" class="list-group-item"><b>UK2</b> - James Clark Ross - 2010-2011</a>
+		<a href="{% url 'cruise_data' 'US3' %}" class="list-group-item"><b>US3</b></a>
 	</ul>
 </div>
 <div class="col-md-6">
 	<ul class="list-group">
-		<a href="/cruise_data/UK3" class="list-group-item"><b>UK3</b> - James Cook - 2011-2012</a>
-		<a href="/cruise_data/UK4" class="list-group-item"><b>UK4</b> - James Clark Ross - 2013</a>
-		<a href="/cruise_data/US5" class="list-group-item"><b>US5</b></a>
-		<a href="/cruise_data/UK5" class="list-group-item"><b>UK5</b></a>
-		<a href="/cruise_data/UK2014" class="list-group-item"><b>UK2014</b> - RRS James Cook</a>
+    <a href="{% url 'cruise_data' 'UK3' %}" class="list-group-item"><b>UK3</b> - James Cook - 2011-2012</a>
+    <a href="{% url 'cruise_data' 'UK4' %}" class="list-group-item"><b>UK4</b> - James Clark Ross - 2013</a>
+    <a href="{% url 'cruise_data' 'US5' %}" class="list-group-item"><b>US5</b></a>
+    <a href="{% url 'cruise_data' 'UK5' %}" class="list-group-item"><b>UK5</b></a>
+    <a href="{% url 'cruise_data' 'UK2014' %}" class="list-group-item"><b>UK2014</b> - RRS James Cook</a>
 	</ul>
 </div>
 {% endblock %}

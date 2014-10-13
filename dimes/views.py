@@ -36,6 +36,10 @@ def cruise_reports(request):
     return render_to_response('cruise_reports.html', {},
         context_instance=RequestContext(request))
 
+def data_policy(request):
+    return render_to_response('data_policy.html', {},
+        context_instance=RequestContext(request))
+
 def outreach(request):
     return render_to_response('outreach.html', {},
         context_instance=RequestContext(request))
