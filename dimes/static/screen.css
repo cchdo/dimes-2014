@@ -1,0 +1,59 @@
+.navbar .container-fluid {
+  text-align: center;
+}
+.navbar-nav {
+  width: 100%;
+  text-align: center;
+}
+.navbar-nav>li {
+  float: none;
+  display: inline-block;
+}
+.navbar-nav a {
+  color: #777;
+  font-size: 1.2em;
+}
+.navbar .navbar-logo {
+  margin-top: 1em;
+  text-align: center;;
+}
+.navbar .navbar-logo p {
+  display: inline-block;
+  font-size: 1.1em;
+  margin-left: 1em;
+}
+body { 
+  font-family: 'Source Sans Pro',sans-serif; 
+  background-color: #DBEEF2;
+  color:#565656;
+}
+/* http://ryanfait.com/resources/footer-stick-to-bottom-of-page/ */
+html, body {
+  height: 100%;
+}
+.wrapper {
+  min-height: 100%;
+  height: auto !important;
+  height: 100%;
+  margin: 0 auto -5em;
+}
+.footer-push, footer {
+  color: #777;
+  text-align: center;
+  height: 5em;
+}
+footer .navbar {
+  padding-bottom: 1em;
+  margin-bottom: 0;
+  background-color: #F2F3F4;
+}
+.nowrap {
+  white-space: nowrap;
+}
+#white {
+  background-color: white;
+ }
+
+table.data-cruise .cruise_id {
+  width: 5em;
+}
