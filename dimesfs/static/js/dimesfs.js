@@ -23,10 +23,17 @@ function localeCompare(a,b){return a.localeCompare(b)}
 function createIcon(type) {
     return $('<span class="glyphicon glyphicon-' + type + '"></span>');
 }
-function createRow(icon, body, accessory) {
+function createRow(icon, body, secondary, accessory) {
   var tr = $("<tr></tr>");
   tr.append($('<td class="icon"></td>').append(icon));
-  tr.append($('<td class="body"></td>').append(body));
+  var colspan = "";
+  if (!secondary) {
+    colspan = 'colspan="2"';
+  }
+  tr.append($('<td class="body"' + colspan + '></td>').append(body));
+  if (secondary) {
+    tr.append($('<td class="secondary"></td>').append(secondary));
+  }
   tr.append($('<td class="accessories"></td>').append(accessory));
   return tr;
 }
@@ -37,6 +44,21 @@ function createAccessoryButton(title, glyph) {
   var button = $('<button type="button" class="btn btn-default btn-xs" title="' + title + '"></button>');
   button.append(createIcon(glyph));
   return button;
+}
+function edit_tag(tag, uri, action) {
+  $.ajax({
+    type: "POST",
+    url: "/dimesfs/edit_tag",
+    data: {
+      tag: tag,
+      uri: uri,
+      action: action,
+      csrfmiddlewaretoken: $.cookie("csrftoken")
+    },
+    success: function(data){
+    },
+    dataType: 'json',
+  });
 }
 function createRowFile(file) {
   var accessories = $('<span class="pull-right"></span>');
@@ -58,10 +80,34 @@ function createRowFile(file) {
     delete_button.click(function() { dimesfs_del_file(this, file); });
     accessories.append(delete_button);
   }
-  var tr = createRow(
-    createIcon('file'),
-    $('<a href="' + file.url + '">' + file.fname + '</a>'),
-    accessories);
+  var body = $('<a href="' + file.url + '">' + file.fname + '</a>');
+  var secondary = $('<ul class="tagdrop">').sortable({
+    connectWith: ".tagdrop",
+    placeholder: "ui-state-highlight",
+    receive: function (event, ui) {
+      var contains = ":contains('" + $(ui.item).html() + "')";
+      var contained = $(contains, event.target);
+      if (contained.length > 1) {
+        contained.get(0).remove();
+        return;
+      }
+      var tag = $(ui.item).html();
+      edit_tag(tag, file.url, 'add');
+    },
+    remove: function (event, ui) {
+      var tag = $(ui.item).html();
+      edit_tag(tag, file.url, 'delete');
+    }
+  });
+  var disallowed = ['path', 'website', 'privacy'];
+  for (var i = 0; i < file.tags.length; i++) {
+    var tag = file.tags[i];
+    if (tag.indexOf(':') && disallowed.indexOf(tag.split(':')[0]) >= 0) {
+      continue;
+    }
+    secondary.append($('<li class="ui-state-default">' + tag + '</li>'));
+  }
+  var tr = createRow(createIcon('file'), body, secondary, accessories);
   if (dimesfs.is_authenticated) {
     dimesfs_set_privacy_button(privacy_button, file.privacy == 'public')
   }
@@ -94,8 +140,35 @@ function createRowDir(key) {
     accessories.append(delete_button);
   }
 
-  var tr = createRow(createIcon('folder-close'), key, accessories)
+  var tr = createRow(createIcon('folder-close'), key, '', accessories)
     .click(function () { dimesfs_cd(getRowBodyItem($(this)).html());});
+  return tr;
+}
+function createRowTagBank() {
+  var tag_bank = $('<div class="tag-bank"></div>');
+  var tag_bank_list = $('<ul class="tagdrop">').appendTo(tag_bank);
+  $.get('/dimesfs/allowed_tags', function (data) {
+    var tag_bank_tags = data.tags;
+    $.each(tag_bank_tags, function (i, x) {
+      tag_bank_list.append($('<li class="ui-state-default">' + x + '</li>'));
+    })
+  }, 'json');
+  tag_bank_list.disableSelection().sortable({
+    connectWith: ".tagdrop",
+    placeholder: "ui-state-highlight",
+    receive: function (event, ui) {
+      var contains = ":contains('" + $(ui.item).html() + "')";
+      var contained = $(contains, event.target);
+      if (contained.length > 1) {
+        contained.get(0).remove();
+        return;
+      }
+    },
+    remove: function (event, ui) {
+      ui.item.clone().prependTo(tag_bank_list);
+    }
+  });
+  var tr = createRow(createIcon('tags'), tag_bank);
   return tr;
 }
 function set_table(){
@@ -104,7 +177,7 @@ function set_table(){
   if (!dimesfs.is_authenticated) {
     // Login list item
     var login = $('<div><a href="/login">Login</a> to see non-public data.</div>');
-    var tr = createRow(createIcon('lock'), login, '');
+    var tr = createRow(createIcon('lock'), login);
     new_tbody.append(tr);
   }
   if (dimesfs.is_authenticated) {
@@ -120,7 +193,7 @@ function set_table(){
     input_button_span.append(create_button);
     new_dir_group.append(newdir_input);
     new_dir_group.append(input_button_span);
-    var tr = createRow(createIcon('plus'), new_dir_group, '');
+    var tr = createRow(createIcon('plus'), new_dir_group);
     new_tbody.append(tr);
 
     // Upload files list item
@@ -143,7 +216,7 @@ function set_table(){
         new_tbody.append(tr);
       }
     });
-    var tr = createRow(createIcon('upload'), new_upload_form, '');
+    var tr = createRow(createIcon('upload'), new_upload_form);
     new_tbody.append(tr);
   }
 
@@ -152,10 +225,12 @@ function set_table(){
   var download_form = $(
       "<a href='" + download_zip_url + "' class=\"btn btn-default input-sm\">" +
       'Download all path files as zip</a>');
-  var tr = createRow(createIcon('download'), download_form, '');
+  var tr = createRow(createIcon('download'), download_form);
   new_tbody.append(tr);
 
   // Add list items for files and directories
+  var loader = $('<tr><td></td><td>Loading...</td></tr>')
+    .hide().appendTo(new_tbody).fadeIn();
   var files = [];
   parseHash();
   $.ajax({
@@ -164,41 +239,44 @@ function set_table(){
     data: JSON.stringify(current_path),
     success: function(data){
       files = data;
+
+      loader.fadeOut().remove();
+
+      dug_tree = fs_struct;
+      for (var i=0; i< current_path.length; i++){
+        var cd = current_path[i];
+        if (dug_tree.hasOwnProperty(cd)){
+          dug_tree = dug_tree[cd];
+        } else {
+          window.location.hash = encodeURIComponent(JSON.stringify([])); 
+        }
+      }
+
+      if (current_path.length > 0){
+        var tr = createRow(createIcon('folder-open'), '..')
+          .click(function () {dimesfs_cd("..");});
+        new_tbody.append(tr);
+      }
+
+      var keys = Object.keys(dug_tree);
+      keys = keys.sort(localeCompare);
+      for (var i=0; i < keys.length; i++){
+        var key = keys[i];
+        var tr = createRowDir(key);
+        new_tbody.append(tr);
+      }
+
+      files = files.sort(function(a,b){return localeCompare(a.fname, b.fname)});
+      for (var i=0; i < files.length; i++){
+        var file = files[i];
+        var tr = createRowFile(files[i]);
+        new_tbody.append(tr);
+      }
+
+      new_tbody.append(createRowTagBank());
     },
     dataType: 'json',
-    async:false
   });
-
-  dug_tree = fs_struct;
-  for (var i=0; i< current_path.length; i++){
-    var cd = current_path[i];
-    if (dug_tree.hasOwnProperty(cd)){
-      dug_tree = dug_tree[cd];
-    } else {
-      window.location.hash = encodeURIComponent(JSON.stringify([])); 
-    }
-  }
-
-  if (current_path.length > 0){
-    var tr = createRow(createIcon('folder-open'), '..', '')
-      .click(function () {dimesfs_cd("..");});
-    new_tbody.append(tr);
-  }
-
-  var keys = Object.keys(dug_tree);
-  keys = keys.sort(localeCompare);
-  for (var i=0; i < keys.length; i++){
-    var key = keys[i];
-    var tr = createRowDir(key);
-    new_tbody.append(tr);
-  }
-
-  files = files.sort(function(a,b){return localeCompare(a.fname, b.fname)});
-  for (var i=0; i < files.length; i++){
-    var file = files[i];
-    var tr = createRowFile(files[i]);
-    new_tbody.append(tr);
-  }
 
   $("#fs_table").replaceWith(new_tbody);
 }

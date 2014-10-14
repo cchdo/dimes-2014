@@ -54,6 +54,7 @@ def _path_dimes(path):
 def _path_from_json(string):
     return "/" + "/".join(json.loads(string))
 
+
 def fslist(request):
     Tree = lambda: defaultdict(Tree) # did you mean recursion?
     fs_tree = Tree()
@@ -190,6 +191,7 @@ def dirflist(request):
             fslist.append({
                 "fname": fff.fname,
                 "url": ofs_to_dimes_uri(fff.uri),
+                "tags": fff.tags,
                 "privacy": privacy,
             })
     return HttpResponse(json.dumps(fslist), content_type="application/json")
@@ -231,6 +233,45 @@ def rename(request):
                 tsc.edit_tag(tag.id, tag.tag.replace(dir_from, dir_to, 1))
             return HttpResponse(json.dumps(dict(status='ok')),
                                 content_type="application/json")
+
+
+def allowed_tags(request):
+    tags = []
+
+    cruises = [
+        'US1', 'US2', 'US3', 'US4', 'US5', 'UK1', 'UK2', 'UK2.5', 'UK3', 'UK4',
+        'UK5',
+    ]
+    data_types = ['ctd', 'adcp', 'xbt', 'microstructure', ]
+    for cruise in cruises:
+        tags.append('cruise:{0}'.format(cruise))
+    for dtype in data_types:
+        tags.append('data_type:{0}'.format(dtype))
+    return HttpResponse(json.dumps(dict(tags=tags)),
+                        content_type="application/json")
+
+def edit_tag(request):
+    """POST edit_tag
+
+    Arguments:
+        action - add or delete
+        uri - the URI of the data to modify
+
+    """
+    uri = _download_url_to_ofs_url(request.POST['uri'])
+    data = tsc.query_data(["uri", "eq", uri], limit=1, single=True)
+    action = request.POST['action']
+    tag = request.POST['tag']
+    tags = data.tags
+    if action == 'delete':
+        if tag in tags:
+            tags.remove(tag)
+    elif action == 'add':
+        if tag not in tags:
+            tags.append(tag)
+    tsc.edit(data.id, tags=tags)
+    return HttpResponse(json.dumps(dict(status='ok')),
+                content_type="application/json")
 
 
 def delete(request):

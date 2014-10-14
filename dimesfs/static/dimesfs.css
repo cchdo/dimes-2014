@@ -8,13 +8,15 @@
   margin-top: -32px;
 }
 #fs_table .body {
-  width: 50%;
 }
 #fs_table .icon {
   vertical-align: middle;
 }
+#fs_table .secondary {
+  width: 30em;
+}
 #fs_table .accessories {
-  width: 10em;
+  width: 9em;
 }
 #fs_table tr.private {
   background-color: #dddddd;
@@ -27,4 +29,31 @@
   border-color: #ddd;
   border-width: 1px;
   border-radius: 4px 4px 0 0;
+}
+.tagdrop {
+  background-color: #fff;
+  border: 1px solid #eee;
+  padding: 0.2em;
+  min-height: 2.2em;
+  min-width: 1em;
+  list-style-type: none;
+  padding-left: 0;
+  margin: 0;
+}
+.tagdrop li {
+  margin: 0 3px 3px 3px;
+  padding: 0.3em;
+
+  float: left;
+  width: 11em;
+  height: 1.8em;
+  line-height: 1em;
+}
+.tagdrop .ui-state-highlight {
+  height: 2.4em;
+  line-height: 2.4em; 
+}
+.tag-bank .tagdrop {
+  border: none;
+  background: transparent;
 }
