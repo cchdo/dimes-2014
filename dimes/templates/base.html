@@ -1,3 +1,4 @@
+{% load cms_tags sekizai_tags menu_tags %}
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -11,9 +12,11 @@
 <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
 <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:300,600' rel='stylesheet' type='text/css'>
 <link rel="stylesheet" href="/static/screen.css">
+    {% render_block "css" %}
 {% block links %}{% endblock %}
   </head>
   <body>
+  {% cms_toolbar %}
   <div class="wrapper">
     <nav class="navbar navbar-default" role="navigation">
       <div class="container-fluid">
@@ -31,15 +34,7 @@
         </div>
         <div class="collapse navbar-collapse" id="collapsed-nav">
           <ul class="nav navbar-nav">
-            <li><a href="/">Home</a></li>
-            <li><a href="/components">Components</a></li>
-            <li><a href="/fieldwork">Fieldwork</a></li>
-            <li><a href="/cruise_reports">Cruise Reports</a></li>
-            <li><a href="/publications">Publications</a></li>
-            <li><a href="/outreach">Outreach</a></li>
-            <li><a href="/people">People</a></li>
-            <li><a href="/calendar">Calendar</a></li>
-            <li><a href="/data">Data</a></li>
+            {% show_menu 0 100 0 0%}
           </ul>
         </div>
       </div>
@@ -47,6 +42,7 @@
 
     <content>
     <div class="container">
+      {% placeholder base_content %}
       {% block content %}{% endblock %}
     </div>
     </content>
@@ -81,5 +77,6 @@
     <!-- Latest compiled and minified JavaScript -->
     <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.js"></script>
     {% block scripts %}{% endblock %}
+    {% render_block "js" %}
   </body>
 </html>
