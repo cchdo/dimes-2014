@@ -81,24 +81,27 @@ function createRowFile(file) {
     accessories.append(delete_button);
   }
   var body = $('<a href="' + file.url + '">' + file.fname + '</a>');
-  var secondary = $('<ul class="tagdrop">').sortable({
-    connectWith: ".tagdrop",
-    placeholder: "ui-state-highlight",
-    receive: function (event, ui) {
-      var contains = ":contains('" + $(ui.item).html() + "')";
-      var contained = $(contains, event.target);
-      if (contained.length > 1) {
-        contained.get(0).remove();
-        return;
+  var secondary = $('<ul class="tagdrop">');
+  if (dimesfs.is_authenticated) {
+    secondary.sortable({
+      connectWith: ".tagdrop",
+      placeholder: "ui-state-highlight",
+      receive: function (event, ui) {
+        var contains = ":contains('" + $(ui.item).html() + "')";
+        var contained = $(contains, event.target);
+        if (contained.length > 1) {
+          contained.get(0).remove();
+          return;
+        }
+        var tag = $(ui.item).html();
+        edit_tag(tag, file.url, 'add');
+      },
+      remove: function (event, ui) {
+        var tag = $(ui.item).html();
+        edit_tag(tag, file.url, 'delete');
       }
-      var tag = $(ui.item).html();
-      edit_tag(tag, file.url, 'add');
-    },
-    remove: function (event, ui) {
-      var tag = $(ui.item).html();
-      edit_tag(tag, file.url, 'delete');
-    }
-  });
+    });
+  }
   var disallowed = ['path', 'website', 'privacy'];
   for (var i = 0; i < file.tags.length; i++) {
     var tag = file.tags[i];
@@ -176,7 +179,7 @@ function set_table(){
 
   if (!dimesfs.is_authenticated) {
     // Login list item
-    var login = $('<div><a href="/login">Login</a> to see non-public data.</div>');
+    var login = $('<div><a href="/login?next=' + window.location.href + '">Login</a> to see non-public data.</div>');
     var tr = createRow(createIcon('lock'), login);
     new_tbody.append(tr);
   }
@@ -273,7 +276,9 @@ function set_table(){
         new_tbody.append(tr);
       }
 
-      new_tbody.append(createRowTagBank());
+      if (dimesfs.is_authenticated) {
+        new_tbody.append(createRowTagBank());
+      }
     },
     dataType: 'json',
   });

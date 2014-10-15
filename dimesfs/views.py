@@ -25,6 +25,15 @@ tsc = TagStoreClient(settings.TS_API_ENDPOINT)
 TAG_WEBSITE = "website:dimes"
 TAG_PATH_PREFIX = 'path:dimes'
 
+
+def _check_auth(func):
+    def checker(request):
+        if not request.user.is_authenticated():
+            return redirect(reverse('login', kwargs=dict(next=request.path)))
+        return func(request)
+    return checker
+
+
 #http://stackoverflow.com/a/2490718
 def encode(key, string):
     encoded_chars = []
@@ -197,6 +206,7 @@ def dirflist(request):
     return HttpResponse(json.dumps(fslist), content_type="application/json")
 
 
+@_check_auth
 def rename(request):
     """POST rename
 
@@ -208,8 +218,6 @@ def rename(request):
         fname - new name
 
     """
-    if not request.user.is_authenticated():
-        return redirect(reverse('login'))
     if request.method == "POST":
         if request.POST['type'] == 'file':
             uri = _download_url_to_ofs_url(request.POST['uri'])
@@ -250,6 +258,8 @@ def allowed_tags(request):
     return HttpResponse(json.dumps(dict(tags=tags)),
                         content_type="application/json")
 
+
+@_check_auth
 def edit_tag(request):
     """POST edit_tag
 
@@ -274,14 +284,13 @@ def edit_tag(request):
                 content_type="application/json")
 
 
+@_check_auth
 def delete(request):
     """POST delete
 
     body should be the uri of the file to delete.
 
     """
-    if not request.user.is_authenticated():
-        return redirect(reverse('login'))
     if request.method == "POST":
         if request.POST['type'] == 'file':
             uri = _download_url_to_ofs_url(request.POST['uri'])
@@ -313,9 +322,8 @@ def delete(request):
                         content_type="application/json")
 
 
+@_check_auth
 def upload(request):
-    if not request.user.is_authenticated():
-        return redirect(reverse('login'))
     path = _path_from_json(request.POST['path'])
     blob = request.FILES['file']
     path = os.path.normpath(path)
@@ -330,9 +338,8 @@ def upload(request):
         return redirect(request.META['HTTP_REFERER'])
 
 
+@_check_auth
 def unzip(request):
-    if not request.user.is_authenticated():
-        return redirect(reverse('login'))
     if request.method == "POST":
         uri = _download_url_to_ofs_url(request.POST['uri'])
         data = tsc.query_data(["uri", "eq", uri], limit=1, single=True)
@@ -368,9 +375,8 @@ def unzip(request):
                             content_type="application/json")
 
 
+@_check_auth
 def toggle_privacy(request):
-    if not request.user.is_authenticated():
-        return redirect(reverse('login'))
     if request.method == "POST":
         uri = _download_url_to_ofs_url(request.POST['uri'])
         data = tsc.query_data(['uri', 'eq', uri], limit=1, single=True)
