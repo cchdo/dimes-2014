@@ -2,3 +2,11 @@ requests
 zipstream
 
 tagstore
+
+django-cms
+djangocms-file
+djangocms-link
+djangocms-snippet
+djangocms-text-ckeditor
+
+git+https://github.com/DocOtak/djangocms-picture.git

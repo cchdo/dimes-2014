@@ -39,11 +39,11 @@ INSTALLED_APPS = (
     'menus',
     'sekizai',
     'djangocms_admin_style',
-    #'djangocms_file',
-    #'djangocms_link',
-    #'djangocms_picture',
-    #'djangocms_snippet',
-    #'djangocms_text_ckeditor',
+    'djangocms_file',
+    'djangocms_link',
+    'djangocms_picture',
+    'djangocms_snippet',
+    'djangocms_text_ckeditor',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -52,7 +52,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.sites',
     'dimes',
-    #'dimesfs',
+    'dimesfs',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -81,7 +81,6 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 )
 
 CMS_TEMPLATES = (
-        ('homepage.html', "Home Page"),
         ('index.html', "Home Page Template"),
         )
 
@@ -102,7 +101,7 @@ CMS_LANGUAGES = {
     'default': {
         'public': True,
         'hide_untranslated': False,
-        'redirect_on_fallback': False,
+        'redirect_on_fallback': True,
     },
     1: [
         {
