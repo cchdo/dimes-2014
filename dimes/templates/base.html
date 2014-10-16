@@ -41,10 +41,11 @@
     </nav>
 
     <content>
+    {% placeholder bs_pre_container_content %}
     <div class="container">
-      {% placeholder base_content %}
       {% block content %}{% endblock %}
     </div>
+    {% placeholder bs_post_container_content %}
     </content>
     <div class="footer-push"></div>
   </div>
