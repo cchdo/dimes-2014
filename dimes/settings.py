@@ -81,7 +81,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 )
 
 CMS_TEMPLATES = (
-        ('index.html', "Home Page Template"),
+        ('blank.html', "Blank Dimes Page"),
         )
 
 MIGRATION_MODULES = {
@@ -115,6 +115,26 @@ CMS_LANGUAGES = {
             'redirect_on_fallback': True,
         },
     ],
+}
+CMS_PLACEHOLDER_CONF = {
+    'bs_container_content': {
+        'name': "Content",
+        'language_fallback': True,
+        'default_plugins': [
+            {
+                'plugin_type': 'TextPlugin',
+                'values': {
+                    'body':'<p>Lorem ipsum dolor sit amet...</p>',
+                },
+            },
+        ],
+        'child_classes': {
+            'TextPlugin': ['PicturePlugin', 'LinkPlugin'],
+        },
+        'parent_classes': {
+            'LinkPlugin': ['TextPlugin'],
+        },
+    },
 }
 
 
