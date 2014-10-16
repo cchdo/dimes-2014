@@ -87,7 +87,10 @@ CMS_TEMPLATES = (
 MIGRATION_MODULES = {
     'cms': 'cms.migrations_django',
     'menus': 'menus.migrations_django',
+    'djangocms_picture': 'djangocms_picture.migrations_django',
     'djangocms_text_ckeditor': 'djangocms_text_ckeditor.migrations_django',
+    'djangocms_link': 'djangocms_link.migrations_django',
+    'djangocms_file': 'djangocms_file.migrations_django',
 }
 
 SITE_ID = 1
@@ -166,3 +169,5 @@ MEDIA_URL = "/media/"
 LOGIN_REDIRECT_URL = '/'
 
 TS_API_ENDPOINT = "http://hdo.ucsd.edu:53000/api/v1"
+
+TEXT_ADDITIONAL_ATTRIBUTES = ('data-toggle', 'data-parent')
