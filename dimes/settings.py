@@ -42,7 +42,7 @@ INSTALLED_APPS = (
     'djangocms_file',
     'djangocms_link',
     'djangocms_picture',
-    'djangocms_snippet',
+    #'djangocms_snippet',
     'djangocms_text_ckeditor',
     'django.contrib.admin',
     'django.contrib.auth',
