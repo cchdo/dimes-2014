@@ -57,6 +57,6 @@ footer .navbar {
 table.data-cruise .cruise_id {
   width: 5em;
 }
-.container .pull-left,.pull-right {
+.container img.pull-left,img.pull-right {
   padding: 10px;
 }
