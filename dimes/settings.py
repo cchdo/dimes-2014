@@ -190,4 +190,6 @@ LOGIN_REDIRECT_URL = '/'
 
 TS_API_ENDPOINT = "http://hdo.ucsd.edu:53000/api/v1"
 
-TEXT_ADDITIONAL_ATTRIBUTES = ('data-toggle', 'data-parent')
+TEXT_ADDITIONAL_TAGS = ('iframe',)
+TEXT_ADDITIONAL_ATTRIBUTES = ('data-toggle', 'data-parent', 'allowfullscreen', 
+        'webkitallowfullscreen', 'mozallowfullscreen',)
