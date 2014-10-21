@@ -284,6 +284,22 @@ def edit_tag(request):
                 content_type="application/json")
 
 
+def _delete_dir(ddir):
+    ddir_recurse = '{0}/%'.format(ddir)
+    data = tsc.query_data(Query.tags_any('eq', ddir))
+    for datum in data:
+        tsc.delete(datum.id)
+    data = tsc.query_data(Query.tags_any('like', ddir_recurse))
+    for datum in data:
+        tsc.delete(datum.id)
+    tags = tsc.query_tags(['tag', 'eq', ddir])
+    for tag in tags:
+        tsc.delete_tag(tag.id)
+    tags = tsc.query_tags(['tag', 'like', ddir_recurse])
+    for tag in tags:
+        tsc.delete_tag(tag.id)
+
+
 @_check_auth
 def delete(request):
     """POST delete
@@ -302,20 +318,7 @@ def delete(request):
         elif request.POST['type'] == 'dir':
             path = _path_from_json(request.POST['path'])
             ddir = _path_dimes(path)
-            ddir_recurse = '{0}/%'.format(ddir)
-            data = tsc.query_data(Query.tags_any('eq', ddir))
-            for datum in data:
-                tsc.delete(datum.id)
-            data = tsc.query_data(
-                Query.tags_any('like', ddir_recurse))
-            for datum in data:
-                tsc.delete(datum.id)
-            tags = tsc.query_tags(['tag', 'eq', ddir])
-            for tag in tags:
-                tsc.delete_tag(tag.id)
-            tags = tsc.query_tags(['tag', 'like', ddir_recurse])
-            for tag in tags:
-                tsc.delete_tag(tag.id)
+            _delete_dir(ddir)
             return HttpResponse(json.dumps(dict(status='ok')),
                         content_type="application/json")
     return HttpResponse(json.dumps(dict(status='failed')),
