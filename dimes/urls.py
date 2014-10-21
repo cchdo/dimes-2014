@@ -8,6 +8,7 @@ from django.conf import settings
 
 urlpatterns = patterns('',
     url(r'^dimesfs/', include('dimesfs.urls')),
+    url(r'^bibliography/', include('zoterobib.urls')),
 
     url(r'^login/$', 'django.contrib.auth.views.login', {
         'template_name': 'login.html'}),

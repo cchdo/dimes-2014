@@ -2,6 +2,7 @@ requests
 zipstream
 
 tagstore
+zoterobib
 
 django-cms
 djangocms-file

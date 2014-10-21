@@ -53,6 +53,7 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'dimes',
     'dimesfs',
+    'zoterobib',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -189,6 +190,8 @@ MEDIA_URL = "/media/"
 LOGIN_REDIRECT_URL = '/'
 
 TS_API_ENDPOINT = "http://hdo.ucsd.edu:53000/api/v1"
+
+ZOTEROBIB_SETTINGS = ("247257", "group", "0oZID54aNyXr8gvQTDZoS9Vs")
 
 TEXT_ADDITIONAL_TAGS = ('iframe',)
 TEXT_ADDITIONAL_ATTRIBUTES = ('data-toggle', 'data-parent', 'allowfullscreen', 
