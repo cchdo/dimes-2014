@@ -25,6 +25,12 @@ tsc = TagStoreClient(settings.TS_API_ENDPOINT)
 TAG_WEBSITE = "website:dimes"
 TAG_PATH_PREFIX = 'path:dimes'
 
+TAGS_CRUISE = (
+        'US1', 'US2', 'US3', 'US4', 'US5', 'UK1', 'UK2', 'UK2.5', 'UK3', 'UK4',
+        'UK5',
+    )
+TAGS_DATA_TYPE = ('ctd', 'adcp', 'xbt', 'microstructure', )
+
 
 def _check_auth(func):
     def checker(request):
@@ -67,16 +73,32 @@ def _path_from_json(string):
 def fslist(request):
     Tree = lambda: defaultdict(Tree) # did you mean recursion?
     fs_tree = Tree()
-    filters = [["tag", "like", _path_dimes("%")]]
-    if not request.user.is_authenticated():
-        filters.append(["data", "any", Query.tags_any("eq", "privacy:public")])
-    fs_tags = tsc.query_tags(*filters, preload=True)
-    fs_pathlist = [t.tag.split(":")[2][1:].split("/") for t in fs_tags]
     def add(tree, path):
         for node in path:
             tree = tree[node]
-    for path in fs_pathlist:
-        add(fs_tree, path)
+
+    view =  request.GET.get("view", None)
+    value =  request.GET.get("value", None)
+
+    if view == "cruise":
+        if value in TAGS_CRUISE:
+            pass
+        else:
+            add(fs_tree, ["Error: An invalid cruise was entered"])
+    elif view == "data_type":
+        if value in TAGS_DATA_TYPE:
+            pass
+        else:
+            add(fs_tree, ["Error: An invalid data_type was entered"])
+    else:
+        filters = [["tag", "like", _path_dimes("%")]]
+        if not request.user.is_authenticated():
+            filters.append(["data", "any", Query.tags_any("eq", "privacy:public")])
+        fs_tags = tsc.query_tags(*filters, preload=True)
+        fs_pathlist = [t.tag.split(":")[2][1:].split("/") for t in fs_tags]
+        for path in fs_pathlist:
+            add(fs_tree, path)
+
     try:
         del fs_tree[""]
     except KeyError:
@@ -246,14 +268,9 @@ def rename(request):
 def allowed_tags(request):
     tags = []
 
-    cruises = [
-        'US1', 'US2', 'US3', 'US4', 'US5', 'UK1', 'UK2', 'UK2.5', 'UK3', 'UK4',
-        'UK5',
-    ]
-    data_types = ['ctd', 'adcp', 'xbt', 'microstructure', ]
-    for cruise in cruises:
+    for cruise in TAGS_CRUISE:
         tags.append('cruise:{0}'.format(cruise))
-    for dtype in data_types:
+    for dtype in TAGS_DATA_TYPE:
         tags.append('data_type:{0}'.format(dtype))
     return HttpResponse(json.dumps(dict(tags=tags)),
                         content_type="application/json")

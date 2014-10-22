@@ -1,5 +1,6 @@
 Dropzone.autoDiscover = false;
 
+var write_allowed = true;
 var fs_struct;
 var current_path = [];
 var dug_tree; // store a reference to the dug tree for mkdir
@@ -8,7 +9,12 @@ if (window.location.hash == ""){
 } else {
   parseHash();
 }
-$.getJSON("/dimesfs/fslist", function(data){
+
+if (window.location.search != ""){
+  write_allowed = false;
+}
+var fslist_url = "/dimesfs/fslist" + window.location.search;
+$.getJSON(fslist_url, function(data){
   fs_struct = data;
   set_table();
 });
@@ -62,7 +68,7 @@ function edit_tag(tag, uri, action) {
 }
 function createRowFile(file) {
   var accessories = $('<span class="pull-right"></span>');
-  if (dimesfs.is_authenticated) {
+  if (dimesfs.is_authenticated && write_allowed) {
     if (file.fname.slice(-4) == ".zip") {
       var unzip_button = createAccessoryButton('Unzip', 'gift');
       unzip_button.click(function() { dimesfs_unzip(this, file); });
@@ -82,7 +88,7 @@ function createRowFile(file) {
   }
   var body = $('<a href="' + file.url + '">' + file.fname + '</a>');
   var secondary = $('<ul class="tagdrop">');
-  if (dimesfs.is_authenticated) {
+  if (dimesfs.is_authenticated && write_allowed) {
     secondary.sortable({
       connectWith: ".tagdrop",
       placeholder: "ui-state-highlight",
@@ -111,7 +117,7 @@ function createRowFile(file) {
     secondary.append($('<li class="ui-state-default">' + tag + '</li>'));
   }
   var tr = createRow(createIcon('file'), body, secondary, accessories);
-  if (dimesfs.is_authenticated) {
+  if (dimesfs.is_authenticated && write_allowed) {
     dimesfs_set_privacy_button(privacy_button, file.privacy == 'public')
   }
   return tr;
@@ -133,7 +139,7 @@ function setRowBodyFromButton(button, html) {
 function createRowDir(key) {
   var accessories = $('<span class="pull-right"></span>');
 
-  if (dimesfs.is_authenticated) {
+  if (dimesfs.is_authenticated && write_allowed) {
     var rename_button = createAccessoryButton('Rename', 'pencil');
     rename_button.click(function(event) { dimesfs_rename(this, key); return false;});
     accessories.append(rename_button);
@@ -183,7 +189,7 @@ function set_table(){
     var tr = createRow(createIcon('lock'), login);
     new_tbody.append(tr);
   }
-  if (dimesfs.is_authenticated) {
+  if (dimesfs.is_authenticated && write_allowed) {
 
     // Change path list item
     var new_dir_group = $('<div class="input-group"></div>');
@@ -238,7 +244,7 @@ function set_table(){
   parseHash();
   $.ajax({
     type: "POST",
-    url: "/dimesfs/dirflist",
+    url: "/dimesfs/dirflist" + window.location.search,
     data: JSON.stringify(current_path),
     success: function(data){
       files = data;
@@ -276,7 +282,7 @@ function set_table(){
         new_tbody.append(tr);
       }
 
-      if (dimesfs.is_authenticated) {
+      if (dimesfs.is_authenticated && write_allowed) {
         new_tbody.append(createRowTagBank());
       }
     },
