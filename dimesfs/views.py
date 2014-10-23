@@ -25,6 +25,8 @@ tsc = TagStoreClient(settings.TS_API_ENDPOINT)
 TAG_WEBSITE = "website:dimes"
 TAG_PATH_PREFIX = 'path:dimes'
 
+TAG_OTHER_DATA = "Other Data"
+
 TAGS_CRUISE = (
         'US1', 'US2', 'US3', 'US4', 'US5', 'UK1', 'UK2', 'UK2.5', 'UK3', 'UK4',
         'UK5',
@@ -77,12 +79,24 @@ def fslist(request):
         for node in path:
             tree = tree[node]
 
-    view =  request.GET.get("view", None)
-    value =  request.GET.get("value", None)
+    view = request.GET.get("view", None)
+    value = request.GET.get("value", None)
 
     if view == "cruise":
         if value in TAGS_CRUISE:
-            pass
+            filters = [["tag", "like", "data_type:%"]]
+            if not request.user.is_authenticated():
+                filters.append(["data", "any", Query.tags_any("eq", "privacy:public")])
+            filters.append(["data", "any", Query.tags_any("eq", "cruise:"+value)])
+            fs_tags = tsc.query_tags(*filters, preload=True)
+            fs_pathlist = [[t.tag.split(":")[1]] for t in fs_tags]
+            if len(tsc.query_data(Query.tags_any('like', 'cruise:'+value),
+                ['tags', 'not_any', ['tag', 'like', 'data_type:%']])) > 0:
+                fs_pathlist.append([TAG_OTHER_DATA])
+            if len(fs_pathlist) is 0:
+                add(fs_tree, ["No data are available from this cruise"])
+            for path in fs_pathlist:
+                add(fs_tree, path)
         else:
             add(fs_tree, ["Error: An invalid cruise was entered"])
     elif view == "data_type":
@@ -205,14 +219,40 @@ def download_zip(request):
 @csrf_exempt
 def dirflist(request):
     fslist=[]
+    view = request.GET.get("view", None)
+    value = request.GET.get("value", None)
     if request.method == "POST":
-        tag = _path_dimes(_path_from_json(request.body))
-        if request.user.is_authenticated():
-            files = [d for d in tsc.query_data(Query.tags_any("eq", tag))]
+        if view == "cruise":
+            if value in TAGS_CRUISE:
+                data_type = json.loads(request.body)
+                try:
+                    tag = data_type[0]
+                    if tag == TAG_OTHER_DATA:
+                        tsq = tsc.query_data(
+                                Query.tags_any('like', 'cruise:'+value),
+                                ['tags', 'not_any', 
+                                    ['tag', 'like', 'data_type:%']]
+                                )
+                        files = [f for f in tsq]
+                    else:
+                        data_type_tag = "data_type:" + tag
+                        tsq = tsc.query_data(
+                                Query.tags_any('like', 'cruise:'+value),
+                                Query.tags_any('eq', data_type_tag),
+                                )
+                        files = [f for f in tsq]
+                except IndexError:
+                    files = []
+        elif view == "data_type":
+            files = []
         else:
-            tsq = tsc.query_data(Query.tags_any("eq", tag),
-                                 Query.tags_any("eq", "privacy:public"))
-            files = [d for d in tsq]
+            tag = _path_dimes(_path_from_json(request.body))
+            if request.user.is_authenticated():
+                files = [d for d in tsc.query_data(Query.tags_any("eq", tag))]
+            else:
+                tsq = tsc.query_data(Query.tags_any("eq", tag),
+                                     Query.tags_any("eq", "privacy:public"))
+                files = [d for d in tsq]
         fslist = []
         for fff in files:
             try:
