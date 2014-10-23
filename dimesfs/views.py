@@ -236,22 +236,23 @@ def dirflist(request):
                 data_type = json.loads(request.body)
                 try:
                     tag = data_type[0]
-                    if tag == TAG_OTHER_DATA:
-                        tsq = tsc.query_data(
-                                Query.tags_any('like', 'cruise:'+value),
-                                ['tags', 'not_any', 
-                                    ['tag', 'like', 'data_type:%']]
-                                )
-                        files = [f for f in tsq]
-                    else:
-                        data_type_tag = "data_type:" + tag
-                        tsq = tsc.query_data(
-                                Query.tags_any('like', 'cruise:'+value),
-                                Query.tags_any('eq', data_type_tag),
-                                )
-                        files = [f for f in tsq]
                 except IndexError:
                     files = []
+                else:
+                    filters = [
+                            Query.tags_any('eq', 'cruise:'+value),
+                            ]
+                    if tag == TAG_OTHER_DATA:
+                        filters.append(
+                            ['tags', 'not_any', ['tag', 'like', 'data_type:%']]
+                        )
+                    else:
+                        data_type_tag = "data_type:" + tag
+                        filters.append(
+                            Query.tags_any('eq', data_type_tag),
+                        )
+                    tsq = tsc.query_data(*filters, preload=True)
+                    files = [f for f in tsq]
         elif view == "data_type":
             files = []
         else:
