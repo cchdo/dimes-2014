@@ -219,10 +219,12 @@ function set_table(){
       '</form>');
     new_upload_form.dropzone({
       //forceFallback: true
-      success: function(_, resp) {
-        files.push(resp);
-        var tr = createRowFile(resp);
-        new_tbody.append(tr);
+      init: function(){
+        this.on("success", function(_, resp) {
+          files.push(resp);
+          var tr = createRowFile(resp);
+          new_tbody.append(tr);
+        });
       }
     });
     var tr = createRow(createIcon('upload'), new_upload_form);
@@ -230,10 +232,16 @@ function set_table(){
   }
 
   // Download path list item
-  var download_zip_url = "/dimesfs/download_zip?path=" + JSON.stringify(current_path);
+  if (window.location.search != ""){
+    var download_zip_url = "/dimesfs/download_zip" + window.location.search;
+    var download_button_text = "Download all files as zip"
+  } else {
+    var download_zip_url = "/dimesfs/download_zip?path=" + JSON.stringify(current_path);
+    var download_button_text = "Download all path files as zip"
+  }
   var download_form = $(
       "<a href='" + download_zip_url + "' class=\"btn btn-default input-sm\">" +
-      'Download all path files as zip</a>');
+      download_button_text +'</a>');
   var tr = createRow(createIcon('download'), download_form);
   new_tbody.append(tr);
 

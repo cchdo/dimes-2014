@@ -159,7 +159,10 @@ HTTP_HOP_BY_HOP = set(['connection', 'keep-alive', 'proxy-authenticate',
 
 def _proxy(response):
     """Convert a requests response to a StreamingHttpResponse."""
-    resp = StreamingHttpResponse(response.iter_content())
+    # chunk_size defaults to 1 byte if not set here, small values of chunk_size
+    # will cause data transfer slowness, and TCP request overhead to make up
+    # abotu 95% of the data transfer
+    resp = StreamingHttpResponse(response.iter_content(chunk_size=2**20))
     for header in response.headers:
         if header in HTTP_HOP_BY_HOP:
             continue
@@ -195,29 +198,57 @@ def tag_value(data, key):
 
 
 def download_zip(request):
-    zdir = _path_from_json(request.GET.get('path'))
-    basedir = _path_dimes(zdir)
-    sane_name = 'dimes{0}.zip'.format(zdir.replace('/', '-'))
-
-    filters = []
-    if not request.user.is_authenticated():
-        filters.append(Query.tags_any("eq", "privacy:public"))
-
-    data = list(tsc.query_data(Query.tags_any('eq', basedir), *filters))
-    if zdir == '/':
-        subdirs = basedir + '%'
-    else:
-        subdirs = basedir + '/%'
-    data.extend(list(tsc.query_data(Query.tags_any('like', subdirs), *filters)))
-
+    view = request.GET.get('view')
     data_arcnames = []
-    for datum in data:
-        fname = datum.fname
-        try:
-            arcname = os.path.join(tag_value(datum, TAG_PATH_PREFIX), fname)
-        except KeyError:
-            continue
-        data_arcnames.append((datum.id, arcname))
+    if view:
+        if view == 'cruise':
+            value = request.GET.get('value')
+            sane_name = 'cruise_data_{0}.zip'.format(value)
+            cruise_tag = "cruise:" + value
+            filters = [
+                    Query.tags_any('eq', cruise_tag)
+                    ]
+            if not request.user.is_authenticated():
+                filters.append(["data", "any", Query.tags_any("eq", "privacy:public")])
+
+            data = [t for t in tsc.query_data(*filters, preload=True)]
+            data_tags = {u"data_type:" + dt for dt in TAGS_DATA_TYPE}
+            for datum in data:
+                datum_types = data_tags.intersection(datum.tags)
+                if datum_types:
+                    for datum_dt in datum_types:
+                        dt = datum_dt.split("data_type:")[1]
+                        arcname = os.path.join("/", value, dt, datum.fname)
+                        data_arcnames.append((datum.id, arcname))
+                else:
+                    arcname = os.path.join("/", value, "other", datum.fname)
+                    data_arcnames.append((datum.id, arcname))
+                    
+        if view == 'data_type':
+            pass
+    else:
+        zdir = _path_from_json(request.GET.get('path'))
+        basedir = _path_dimes(zdir)
+        sane_name = 'dimes{0}.zip'.format(zdir.replace('/', '-'))
+
+        filters = []
+        if not request.user.is_authenticated():
+            filters.append(Query.tags_any("eq", "privacy:public"))
+
+        data = list(tsc.query_data(Query.tags_any('eq', basedir), *filters))
+        if zdir == '/':
+            subdirs = basedir + '%'
+        else:
+            subdirs = basedir + '/%'
+        data.extend(list(tsc.query_data(Query.tags_any('like', subdirs), *filters)))
+
+        for datum in data:
+            fname = datum.fname
+            try:
+                arcname = os.path.join(tag_value(datum, TAG_PATH_PREFIX), fname)
+            except KeyError:
+                continue
+            data_arcnames.append((datum.id, arcname))
 
     data = dict(data_arcnames=data_arcnames, fname=sane_name,
                 ofs_endpoint=tsc._api_endpoint('ofs'))
@@ -399,10 +430,11 @@ def upload(request):
     path = os.path.normpath(path)
     if path == '.':
         path = ''
-        tags = [TAG_WEBSITE, 'privacy:dimes', _path_dimes(path)]
+    tags = [TAG_WEBSITE, 'privacy:dimes', _path_dimes(path)]
     resp = tsc.create(blob, unicode(blob), tags)
     if request.is_ajax():
-        return HttpResponse(json.dumps(dict(fname=resp.fname, url=resp.uri)),
+        return HttpResponse(json.dumps(dict(fname=resp.fname, url=resp.uri,
+            tags=tags)),
                             content_type="application/json")
     else:
         return redirect(request.META['HTTP_REFERER'])
