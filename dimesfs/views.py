@@ -84,15 +84,24 @@ def fslist(request):
 
     if view == "cruise":
         if value in TAGS_CRUISE:
-            filters = [["tag", "like", "data_type:%"]]
+            cruise_tag = "cruise:" + value
+            filters = [
+                    ["tag", "like", "data_type:%"],
+                    ["data", "any", Query.tags_any("eq", cruise_tag)],
+                    ]
             if not request.user.is_authenticated():
                 filters.append(["data", "any", Query.tags_any("eq", "privacy:public")])
-            filters.append(["data", "any", Query.tags_any("eq", "cruise:"+value)])
+
             fs_tags = tsc.query_tags(*filters, preload=True)
             fs_pathlist = [[t.tag.split(":")[1]] for t in fs_tags]
-            if len(tsc.query_data(Query.tags_any('like', 'cruise:'+value),
-                ['tags', 'not_any', ['tag', 'like', 'data_type:%']])) > 0:
+
+            other_files = tsc.query_data(
+                    Query.tags_any('like', cruise_tag),
+                    ['tags', 'not_any', ['tag', 'like', 'data_type:%']],
+                    )
+            if other_files:
                 fs_pathlist.append([TAG_OTHER_DATA])
+
             if len(fs_pathlist) is 0:
                 add(fs_tree, ["No data are available from this cruise"])
             for path in fs_pathlist:
