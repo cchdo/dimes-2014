@@ -25,7 +25,7 @@ tsc = TagStoreClient(settings.TS_API_ENDPOINT)
 TAG_WEBSITE = "website:dimes"
 TAG_PATH_PREFIX = 'path:dimes'
 
-TAG_OTHER_DATA = "Other Data"
+TAG_OTHER_DATA = "Other"
 
 TAGS_CRUISE = (
         'US1', 'US2', 'US3', 'US4', 'US5', 'UK1', 'UK2', 'UK2.5', 'UK3', 'UK4',
@@ -80,39 +80,41 @@ def fslist(request):
             tree = tree[node]
 
     view = request.GET.get("view", None)
-    value = request.GET.get("value", None)
 
-    if view == "cruise":
-        if value in TAGS_CRUISE:
-            cruise_tag = "cruise:" + value
-            filters = [
-                    ["tag", "like", "data_type:%"],
-                    ["data", "any", Query.tags_any("eq", cruise_tag)],
-                    ]
-            if not request.user.is_authenticated():
-                filters.append(["data", "any", Query.tags_any("eq", "privacy:public")])
+    if view:
+        value = request.GET.get("value", None)
+        primary_tag = view + ":" + value
 
-            fs_tags = tsc.query_tags(*filters, preload=True)
-            fs_pathlist = [[t.tag.split(":")[1]] for t in fs_tags]
-
-            other_files = tsc.query_data(
-                    Query.tags_any('like', cruise_tag),
-                    ['tags', 'not_any', ['tag', 'like', 'data_type:%']],
-                    )
-            if other_files:
-                fs_pathlist.append([TAG_OTHER_DATA])
-
-            if len(fs_pathlist) is 0:
-                add(fs_tree, ["No data are available from this cruise"])
-            for path in fs_pathlist:
-                add(fs_tree, path)
+        if view == "cruise" and value in TAGS_CRUISE:
+            secondary_tag = "data_type:%"
+        elif view == "data_type" and value in TAGS_DATA_TYPE:
+            secondary_tag = "cruise:%"
         else:
-            add(fs_tree, ["Error: An invalid cruise was entered"])
-    elif view == "data_type":
-        if value in TAGS_DATA_TYPE:
-            pass
-        else:
-            add(fs_tree, ["Error: An invalid data_type was entered"])
+            add(fs_tree, ["{0} is an unknown value for {1}".format(value, view)])
+            return HttpResponse(json.dumps(fs_tree), content_type="application/json")
+
+        filters = [
+                ["tag", "like", secondary_tag],
+                ["data", "any", Query.tags_any("eq", primary_tag)],
+                ]
+        if not request.user.is_authenticated():
+            filters.append(["data", "any", Query.tags_any("eq", "privacy:public")])
+
+        fs_tags = tsc.query_tags(*filters, preload=True)
+        fs_pathlist = [[t.tag.split(":")[1]] for t in fs_tags]
+
+        other_files = tsc.query_data(
+                Query.tags_any('like', primary_tag),
+                ['tags', 'not_any', ['tag', 'like', secondary_tag]],
+                )
+
+        if other_files:
+            fs_pathlist.append([TAG_OTHER_DATA])
+
+        if len(fs_pathlist) is 0:
+            add(fs_tree, ["No data are available from this {0}".format(view)])
+        for path in fs_pathlist:
+            add(fs_tree, path)
     else:
         filters = [["tag", "like", _path_dimes("%")]]
         if not request.user.is_authenticated():
@@ -196,6 +198,10 @@ def tag_value(data, key):
             return tag[len(prefix):]
     raise KeyError()
 
+def _add_dirs_arclist(name_list, datum, *dirs):
+    path = os.path.join("/", *dirs)
+    arcname = os.path.join(path, datum.fname)
+    name_list.append((datum.id, arcname))
 
 def download_zip(request):
     view = request.GET.get('view')
@@ -209,7 +215,7 @@ def download_zip(request):
                     Query.tags_any('eq', cruise_tag)
                     ]
             if not request.user.is_authenticated():
-                filters.append(["data", "any", Query.tags_any("eq", "privacy:public")])
+                filters.append(Query.tags_any("eq", "privacy:public"))
 
             data = [t for t in tsc.query_data(*filters, preload=True)]
             data_tags = {u"data_type:" + dt for dt in TAGS_DATA_TYPE}
@@ -218,11 +224,9 @@ def download_zip(request):
                 if datum_types:
                     for datum_dt in datum_types:
                         dt = datum_dt.split("data_type:")[1]
-                        arcname = os.path.join("/", value, dt, datum.fname)
-                        data_arcnames.append((datum.id, arcname))
+                        _add_dirs_arclist(data_arcnames, datum, value, dt)
                 else:
-                    arcname = os.path.join("/", value, "other", datum.fname)
-                    data_arcnames.append((datum.id, arcname))
+                    _add_dirs_arclist(data_arcnames, datum, value, TAG_OTHER_DATA)
                     
         if view == 'data_type':
             pass
@@ -262,30 +266,33 @@ def dirflist(request):
     view = request.GET.get("view", None)
     value = request.GET.get("value", None)
     if request.method == "POST":
-        if view == "cruise":
-            if value in TAGS_CRUISE:
-                data_type = json.loads(request.body)
-                try:
-                    tag = data_type[0]
-                except IndexError:
-                    files = []
+        if view:
+            primary_tag = view + ":" + value
+            path = json.loads(request.body)
+            if view == "cruise" and value in TAGS_CRUISE:
+                secondary_tag = "data_type:%"
+            elif view == "data_type" and value in TAGS_DATA_TYPE:
+                secondary_tag = "cruise:%"
+            try:
+                path_tag = path[0]
+            except IndexError:
+                files = []
+            else:
+                filters = [
+                        Query.tags_any('eq', primary_tag),
+                        ]
+                if path_tag == TAG_OTHER_DATA:
+                    filters.append(
+                        ['tags', 'not_any', ['tag', 'like', secondary_tag]]
+                    )
                 else:
-                    filters = [
-                            Query.tags_any('eq', 'cruise:'+value),
-                            ]
-                    if tag == TAG_OTHER_DATA:
-                        filters.append(
-                            ['tags', 'not_any', ['tag', 'like', 'data_type:%']]
-                        )
-                    else:
-                        data_type_tag = "data_type:" + tag
-                        filters.append(
-                            Query.tags_any('eq', data_type_tag),
-                        )
-                    tsq = tsc.query_data(*filters, preload=True)
-                    files = [f for f in tsq]
-        elif view == "data_type":
-            files = []
+                    data_type_tag = secondary_tag[:-1] + path_tag
+                    filters.append(
+                        Query.tags_any('eq', data_type_tag),
+                    )
+                tsq = tsc.query_data(*filters, preload=True)
+                files = [f for f in tsq]
+
         else:
             tag = _path_dimes(_path_from_json(request.body))
             if request.user.is_authenticated():
@@ -294,6 +301,7 @@ def dirflist(request):
                 tsq = tsc.query_data(Query.tags_any("eq", tag),
                                      Query.tags_any("eq", "privacy:public"))
                 files = [d for d in tsq]
+
         fslist = []
         for fff in files:
             try:
