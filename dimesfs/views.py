@@ -205,31 +205,36 @@ def _add_dirs_arclist(name_list, datum, *dirs):
 
 def download_zip(request):
     view = request.GET.get('view')
+    value = request.GET.get('value')
     data_arcnames = []
     if view:
+        primary_tag = view + ":" + value
         if view == 'cruise':
-            value = request.GET.get('value')
-            sane_name = 'cruise_data_{0}.zip'.format(value)
-            cruise_tag = "cruise:" + value
-            filters = [
-                    Query.tags_any('eq', cruise_tag)
-                    ]
-            if not request.user.is_authenticated():
-                filters.append(Query.tags_any("eq", "privacy:public"))
-
-            data = [t for t in tsc.query_data(*filters, preload=True)]
-            data_tags = {u"data_type:" + dt for dt in TAGS_DATA_TYPE}
-            for datum in data:
-                datum_types = data_tags.intersection(datum.tags)
-                if datum_types:
-                    for datum_dt in datum_types:
-                        dt = datum_dt.split("data_type:")[1]
-                        _add_dirs_arclist(data_arcnames, datum, value, dt)
-                else:
-                    _add_dirs_arclist(data_arcnames, datum, value, TAG_OTHER_DATA)
-                    
+            secondary_tag = u"data_type:"
+            allowed_secondary_values = TAGS_DATA_TYPE
         if view == 'data_type':
-            pass
+            secondary_tag = u"cruise:"
+            allowed_secondary_values = TAGS_CRUISE
+
+        primary_path = "/dimes_data_{0}".format(value)
+        sane_name = primary_path[1:] + ".zip"
+
+        filters = [
+                Query.tags_any('eq', primary_tag)
+                ]
+        if not request.user.is_authenticated():
+            filters.append(Query.tags_any("eq", "privacy:public"))
+
+        data = [t for t in tsc.query_data(*filters, preload=True)]
+        data_tags = {secondary_tag + dt for dt in allowed_secondary_values}
+        for datum in data:
+            datum_types = data_tags.intersection(datum.tags)
+            if datum_types:
+                for datum_dt in datum_types:
+                    dt = datum_dt.split(secondary_tag)[1]
+                    _add_dirs_arclist(data_arcnames, datum, value, dt)
+            else:
+                _add_dirs_arclist(data_arcnames, datum, value, TAG_OTHER_DATA)
     else:
         zdir = _path_from_json(request.GET.get('path'))
         basedir = _path_dimes(zdir)
