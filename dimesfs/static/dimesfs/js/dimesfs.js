@@ -260,6 +260,13 @@ function set_table(){
       download_button_text +'</a>');
   var tr = createRow(createIcon('download'), download_form);
   new_tbody.append(tr);
+  if (current_path.length > 0){
+    var tr = createRow(createIcon('folder-open'), '..')
+      .click(function () {dimesfs_cd("..");});
+    new_tbody.append(tr);
+  }
+
+  $("#fs_table").replaceWith(new_tbody);
 
   // Add list items for files and directories
   var loader = $('<tr><td></td><td>Loading...</td></tr>')
@@ -285,12 +292,6 @@ function set_table(){
         }
       }
 
-      if (current_path.length > 0){
-        var tr = createRow(createIcon('folder-open'), '..')
-          .click(function () {dimesfs_cd("..");});
-        new_tbody.append(tr);
-      }
-
       var keys = Object.keys(dug_tree);
       keys = keys.sort(localeCompare);
       for (var i=0; i < keys.length; i++){
@@ -312,8 +313,6 @@ function set_table(){
     },
     dataType: 'json',
   });
-
-  $("#fs_table").replaceWith(new_tbody);
 }
 function dimesfs_add_dir(tbody, dname) {
   if ($(tbody.children('tr:contains("' + dname + '")'))) {
