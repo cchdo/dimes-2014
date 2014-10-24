@@ -51,23 +51,49 @@ function createAccessoryButton(title, glyph) {
   button.append(createIcon(glyph));
   return button;
 }
-function edit_tag(tag, uri, action) {
+function edit_tag(type, tag, oid, action) {
+  var data = {
+    tag: tag,
+    type: type,
+    action: action,
+    csrfmiddlewaretoken: $.cookie("csrftoken")
+  };
+  if (type == "file") {
+    data.uri = oid;
+  } else if (type == "dir") {
+    data.path = oid;
+  }
   $.ajax({
     type: "POST",
     url: "/dimesfs/edit_tag",
-    data: {
-      tag: tag,
-      uri: uri,
-      action: action,
-      csrfmiddlewaretoken: $.cookie("csrftoken")
+    data: data,
+    success: function(data){},
+    dataType: 'json'
+  });
+}
+function addTagdrop(ul, type, oid) {
+  ul.sortable({
+    connectWith: ".tagdrop",
+    placeholder: "ui-state-highlight",
+    receive: function (event, ui) {
+      var contains = ":contains('" + $(ui.item).html() + "')";
+      var contained = $(contains, event.target);
+      if (contained.length > 1) {
+        contained.get(0).remove();
+        return;
+      }
+      var tag = $(ui.item).html();
+      edit_tag(type, tag, oid, 'add');
     },
-    success: function(data){
-    },
-    dataType: 'json',
+    remove: function (event, ui) {
+      var tag = $(ui.item).html();
+      edit_tag(type, tag, oid, 'delete');
+    }
   });
 }
 function createRowFile(file) {
   var accessories = $('<span class="pull-right"></span>');
+  var secondary = $('<ul class="tagdrop">');
   if (dimesfs.is_authenticated && write_allowed) {
     if (file.fname.slice(-4) == ".zip") {
       var unzip_button = createAccessoryButton('Unzip', 'gift');
@@ -85,37 +111,20 @@ function createRowFile(file) {
     var delete_button = createAccessoryButton('Delete', 'remove');
     delete_button.click(function() { dimesfs_del_file(this, file); });
     accessories.append(delete_button);
+
+    addTagdrop(secondary, "file", file.url);
+    var disallowed = ['path', 'website', 'privacy'];
+    for (var i = 0; i < file.tags.length; i++) {
+      var tag = file.tags[i];
+      if (tag.indexOf(':') && disallowed.indexOf(tag.split(':')[0]) >= 0) {
+        continue;
+      }
+      secondary.append($('<li class="ui-state-default">' + tag + '</li>'));
+    }
+  } else {
+    secondary = '';
   }
   var body = $('<a href="' + file.url + '">' + file.fname + '</a>');
-  var secondary = $('<ul class="tagdrop">');
-  if (dimesfs.is_authenticated && write_allowed) {
-    secondary.sortable({
-      connectWith: ".tagdrop",
-      placeholder: "ui-state-highlight",
-      receive: function (event, ui) {
-        var contains = ":contains('" + $(ui.item).html() + "')";
-        var contained = $(contains, event.target);
-        if (contained.length > 1) {
-          contained.get(0).remove();
-          return;
-        }
-        var tag = $(ui.item).html();
-        edit_tag(tag, file.url, 'add');
-      },
-      remove: function (event, ui) {
-        var tag = $(ui.item).html();
-        edit_tag(tag, file.url, 'delete');
-      }
-    });
-  }
-  var disallowed = ['path', 'website', 'privacy'];
-  for (var i = 0; i < file.tags.length; i++) {
-    var tag = file.tags[i];
-    if (tag.indexOf(':') && disallowed.indexOf(tag.split(':')[0]) >= 0) {
-      continue;
-    }
-    secondary.append($('<li class="ui-state-default">' + tag + '</li>'));
-  }
   var tr = createRow(createIcon('file'), body, secondary, accessories);
   if (dimesfs.is_authenticated && write_allowed) {
     dimesfs_set_privacy_button(privacy_button, file.privacy == 'public')
@@ -138,6 +147,7 @@ function setRowBodyFromButton(button, html) {
 }
 function createRowDir(key) {
   var accessories = $('<span class="pull-right"></span>');
+  var secondary = $('<ul class="tagdrop">');
 
   if (dimesfs.is_authenticated && write_allowed) {
     var rename_button = createAccessoryButton('Rename', 'pencil');
@@ -147,9 +157,15 @@ function createRowDir(key) {
     var delete_button = createAccessoryButton('Delete', 'remove');
     delete_button.click(function() { dimesfs_del(this, key); return false; });
     accessories.append(delete_button);
+
+    var path = current_path.slice(0);
+    path.push(key);
+    addTagdrop(secondary, "dir", JSON.stringify(path));
+  } else {
+    secondary = '';
   }
 
-  var tr = createRow(createIcon('folder-close'), key, '', accessories)
+  var tr = createRow(createIcon('folder-close'), key, secondary, accessories)
     .click(function () { dimesfs_cd(getRowBodyItem($(this)).html());});
   return tr;
 }

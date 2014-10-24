@@ -331,11 +331,14 @@ def rename(request):
     """POST rename
 
     Arguments: 
-        path_from - path to rename from 
-        path to - path to rename to
+        type - the type of filesystem object to modify, either file or dir
 
-        data_id - data id to rename
-        fname - new name
+        If the type is file:
+            fname - specifies the new file name
+
+        If the type is dir:
+            path_from - path to rename from 
+            path to - path to rename to
 
     """
     if request.method == "POST":
@@ -361,6 +364,8 @@ def rename(request):
                 tsc.edit_tag(tag.id, tag.tag.replace(dir_from, dir_to, 1))
             return HttpResponse(json.dumps(dict(status='ok')),
                                 content_type="application/json")
+    return HttpResponse(json.dumps(dict(status='invalid')),
+                        status_code=400, content_type="application/json")
 
 
 def allowed_tags(request):
@@ -374,19 +379,7 @@ def allowed_tags(request):
                         content_type="application/json")
 
 
-@_check_auth
-def edit_tag(request):
-    """POST edit_tag
-
-    Arguments:
-        action - add or delete
-        uri - the URI of the data to modify
-
-    """
-    uri = _download_url_to_ofs_url(request.POST['uri'])
-    data = tsc.query_data(["uri", "eq", uri], limit=1, single=True)
-    action = request.POST['action']
-    tag = request.POST['tag']
+def _edit_tags(data, tag, action):
     tags = data.tags
     if action == 'delete':
         if tag in tags:
@@ -395,8 +388,48 @@ def edit_tag(request):
         if tag not in tags:
             tags.append(tag)
     tsc.edit(data.id, tags=tags)
-    return HttpResponse(json.dumps(dict(status='ok')),
-                content_type="application/json")
+    
+
+@_check_auth
+def edit_tag(request):
+    """POST edit_tag
+
+    Arguments:
+        action - add or delete
+        tag - the tag
+
+        type - the type of filesystem object to edit, either file or dir
+
+        If type is file:
+            uri - the URI of the data to modify
+
+        If type is dir:
+            path - the path to apply the action to
+
+
+    """
+    action = request.POST['action']
+    tag = request.POST['tag']
+    if request.POST['type'] == 'file':
+        uri = _download_url_to_ofs_url(request.POST['uri'])
+        data = tsc.query_data(["uri", "eq", uri], limit=1, single=True)
+        _edit_tags(data, tag, action)
+        return HttpResponse(json.dumps(dict(status='ok')),
+                    content_type="application/json")
+    elif request.POST['type'] == 'dir':
+        path = _path_dimes(_path_from_json(request.POST['path']))
+
+        data = tsc.query_data(Query.tags_any("eq", path))
+        for datum in data:
+            _edit_tags(datum, tag, action)
+        data = tsc.query_data(Query.tags_any("like", path + "/%"))
+        for datum in data:
+            _edit_tags(datum, tag, action)
+
+        return HttpResponse(json.dumps(dict(status='ok')),
+                    content_type="application/json")
+    return HttpResponse(json.dumps(dict(status='invalid')),
+                        status_code=400, content_type="application/json")
 
 
 def _delete_dir(ddir):
