@@ -434,16 +434,16 @@ def edit_tag(request):
 
 def _delete_dir(ddir):
     ddir_recurse = '{0}/%'.format(ddir)
-    data = tsc.query_data(Query.tags_any('eq', ddir))
+    data = tsc.query_data(Query.tags_any('eq', ddir), preload=True)
     for datum in data:
         tsc.delete(datum.id)
-    data = tsc.query_data(Query.tags_any('like', ddir_recurse))
+    data = tsc.query_data(Query.tags_any('like', ddir_recurse), preload=True)
     for datum in data:
         tsc.delete(datum.id)
-    tags = tsc.query_tags(['tag', 'eq', ddir])
+    tags = tsc.query_tags(['tag', 'eq', ddir], preload=True)
     for tag in tags:
         tsc.delete_tag(tag.id)
-    tags = tsc.query_tags(['tag', 'like', ddir_recurse])
+    tags = tsc.query_tags(['tag', 'like', ddir_recurse], preload=True)
     for tag in tags:
         tsc.delete_tag(tag.id)
 
