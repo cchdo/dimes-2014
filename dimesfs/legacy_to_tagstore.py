@@ -1,12 +1,16 @@
 import os
+import os.path
+import sys
 import csv
 import logging
 
-from dimesfs.views import PATH_TAG_PREFIX
+sys.path.insert(0, os.path.dirname(__name__))
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "dimes.settings")
+from django.conf import settings
+from dimesfs.views import TAG_PATH_PREFIX
 
 from tagstore.client import TagStoreClient
 
-TS_ENDPOINT = 'http://sui.ucsd.edu:5000/api/v1'
 DIMES_FS_PATH = "/Users/myshen/Sites/dimes/datafiles/0000" #path to dir with all the numbered dirs in it
 DIMES_DB_CSV = "dimes_production.csv"
 """
@@ -35,7 +39,7 @@ Procedure is as follows:
     2) Will need access to the actual fs that the dimes files are stored on
        Set the DIMES_FS_PATH to whatever the dir which contains all the
        0000 to nnnn dirs
-    3) Set TS_ENDPOINT to where the tagstore is..
+    3) Set TS_API_ENDPOINT to where the tagstore is..
     4) Run this script, hope nothing goes wrong, it will take about 30 minutes
 """
 
@@ -66,15 +70,15 @@ def main():
                     line[col] = False
             data.append(line)
     
-    cli = TagStoreClient(TS_ENDPOINT)
-    
+    cli = TagStoreClient(settings.TS_API_ENDPOINT)
+
     log.info("importing")
     for d in data:
         if not d['deleted']:
             base_tags = [
                 u'website:dimes',
                 ]
-            dir_tag = u'{0}:{1}'.format(PATH_TAG_PREFIX, d['directory'])
+            dir_tag = u'{0}:{1}'.format(TAG_PATH_PREFIX, d['directory'])
             base_tags.append(dir_tag)
             fname = d['filename']
             if not d['public']:
