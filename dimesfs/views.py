@@ -31,8 +31,8 @@ TAGS_CRUISE = (
         'US1', 'US2', 'US3', 'US4', 'US5', 'UK1', 'UK2', 'UK2.5', 'UK3', 'UK4',
         'UK5',
     )
-TAGS_DATA_TYPE = ('ctd', 'adcp', 'xbt', 'microstructure', 
-        'xctd', 'underway', 'thermosalinograph',
+TAGS_DATA_TYPE = ('CTD', 'ADCP', 'LADCP', 'SADCP', 'XBT', 'microstructure', 
+        'XCTD', 'underway', 'thermosalinograph',
         'navigation', 'bathymetry', 'tracer',
         'floats', 'drifters', 'bottle',
         )
