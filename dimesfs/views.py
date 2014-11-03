@@ -242,7 +242,8 @@ def download_zip(request):
     else:
         zdir = _path_from_json(request.GET.get('path'))
         basedir = _path_dimes(zdir)
-        sane_name = 'dimes{0}.zip'.format(zdir.replace('/', '-'))
+        sane_name = 'dimes{0}.zip'.format(
+            zdir.replace('/', '-').replace(' ', '_'))
 
         filters = []
         if not request.user.is_authenticated():
