@@ -291,25 +291,28 @@ function set_table(){
           window.location.hash = encodeURIComponent(JSON.stringify([])); 
         }
       }
+      
+      var docfrag = $(document.createDocumentFragment());
 
       var keys = Object.keys(dug_tree);
       keys = keys.sort(localeCompare);
       for (var i=0; i < keys.length; i++){
         var key = keys[i];
         var tr = createRowDir(key);
-        new_tbody.append(tr);
+        docfrag.append(tr);
       }
 
       files = files.sort(function(a,b){return localeCompare(a.fname, b.fname)});
       for (var i=0; i < files.length; i++){
         var file = files[i];
         var tr = createRowFile(files[i]);
-        new_tbody.append(tr);
+        docfrag.append(tr);
       }
 
       if (dimesfs.is_authenticated && write_allowed) {
-        new_tbody.append(createRowTagBank());
+        docfrag.append(createRowTagBank());
       }
+      new_tbody.append(docfrag)
     },
     dataType: 'json',
   });
