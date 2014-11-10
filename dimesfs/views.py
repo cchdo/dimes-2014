@@ -20,7 +20,8 @@ from tagstore.client import TagStoreClient, Query
 
 secret = "66969bfac21f5dba5e3d" # 10 bytes
 
-tsc = TagStoreClient(settings.TS_API_ENDPOINT)
+tsc = TagStoreClient(settings.TS_API_ENDPOINT, results_per_page=20,
+        preload_page_num_results=20,)
 
 TAG_WEBSITE = "website:dimes"
 TAG_PATH_PREFIX = 'path:dimes'
@@ -306,11 +307,17 @@ def dirflist(request):
         else:
             tag = _path_dimes(_path_from_json(request.body))
             if request.user.is_authenticated():
-                files = [d for d in tsc.query_data(Query.tags_any("eq", tag))]
+                tsq = tsc.query_data(Query.tags_any("eq", tag))
             else:
                 tsq = tsc.query_data(Query.tags_any("eq", tag),
                                      Query.tags_any("eq", "privacy:public"))
-                files = [d for d in tsq]
+            start = len(tsq.objects)
+            if start > 0:
+                page = 1
+                tsq.get_page(page=page)
+            stop = len(tsq.objects)
+            files = tsq[start:stop]
+            #files = [d for d in tsq]
 
         fslist = []
         for fff in files:

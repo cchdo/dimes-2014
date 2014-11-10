@@ -43,6 +43,49 @@ function createRow(icon, body, secondary, accessory) {
   tr.append($('<td class="accessories"></td>').append(accessory));
   return tr;
 }
+function createPaginationButton(text, disabled){
+  var disabled_text = '';
+  if (disabled){
+    disabled_text = 'disabled="disabled"';
+  }
+  var button = $('<button type="button" class="btn btn-md btn-default" '+ disabled_text +'>'+ text +'</button>');
+  return button;
+}
+
+function createPaginationRow(current_page, total_pages) {
+  var first_page = false;
+  if (current_page == 0){
+    first_page = true;
+  }
+  var last_page = false;
+  if (current_page == (total_pages - 1)){
+    last_page = true;
+  }
+  var tr = $("<tr></tr>");
+  var td = $('<td style="text-align:center;" colspan="4"></td>');
+  tr.append(td);
+  var form = $('<form class="form-inline" role="form"></form>');
+  var back_group = $('<div class="btn-group"></div>');
+  var for_group = $('<div class="btn-group"></div>');
+  back_group.append(createPaginationButton("First", first_page));
+  back_group.append(createPaginationButton("Prevous", first_page));
+  for_group.append(createPaginationButton("Next", last_page));
+  for_group.append(createPaginationButton("Last", last_page));
+
+  var page_select = $('<select class="form-control"></select>');
+  for (var i=0; i<total_pages; i++){
+    var selected = "";
+    if (i == current_page){
+      selected = "selected";
+    }
+    page_select.append($('<option '+selected+'>Page '+ (i +1) +'</option>'));
+  }
+  form.append(back_group);
+  form.append(page_select);
+  form.append(for_group);
+  td.append(form);
+  return tr;
+}
 function input_hidden(name, value) {
   return '<input type="hidden" name="' + name + "\" value='" + value + "'>";
 }
@@ -308,6 +351,9 @@ function set_table(){
         var tr = createRowFile(files[i]);
         docfrag.append(tr);
       }
+
+      var tr = createPaginationRow(4, 10);
+      docfrag.append(tr);
 
       if (dimesfs.is_authenticated && write_allowed) {
         docfrag.append(createRowTagBank());
