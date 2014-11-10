@@ -20,8 +20,8 @@ from tagstore.client import TagStoreClient, Query
 
 secret = "66969bfac21f5dba5e3d" # 10 bytes
 
-tsc = TagStoreClient(settings.TS_API_ENDPOINT, results_per_page=20,
-        preload_page_num_results=20,)
+tsc = TagStoreClient(settings.TS_API_ENDPOINT, results_per_page=50,
+        preload_page_num_results=50,)
 
 TAG_WEBSITE = "website:dimes"
 TAG_PATH_PREFIX = 'path:dimes'
@@ -276,6 +276,9 @@ def dirflist(request):
     fslist=[]
     view = request.GET.get("view", None)
     value = request.GET.get("value", None)
+    page = request.GET.get("page", None)
+    tsq = None
+    pages = 0
     if request.method == "POST":
         if view:
             primary_tag = view + ":" + value
@@ -302,7 +305,6 @@ def dirflist(request):
                         Query.tags_any('eq', data_type_tag),
                     )
                 tsq = tsc.query_data(*filters, preload=True)
-                files = [f for f in tsq]
 
         else:
             tag = _path_dimes(_path_from_json(request.body))
@@ -311,13 +313,14 @@ def dirflist(request):
             else:
                 tsq = tsc.query_data(Query.tags_any("eq", tag),
                                      Query.tags_any("eq", "privacy:public"))
+        if tsq is not None:
             start = len(tsq.objects)
             if start > 0:
-                page = 1
+                page = int(page) + 1
                 tsq.get_page(page=page)
             stop = len(tsq.objects)
             files = tsq[start:stop]
-            #files = [d for d in tsq]
+            pages = tsq.num_pages
 
         fslist = []
         for fff in files:
@@ -331,7 +334,9 @@ def dirflist(request):
                 "tags": fff.tags,
                 "privacy": privacy,
             })
-    return HttpResponse(json.dumps(fslist), content_type="application/json")
+        #cannot rely on the tsq.page value
+        response_dict = {'page':page, 'pages':pages, 'files':fslist}
+    return HttpResponse(json.dumps(response_dict), content_type="application/json")
 
 
 @_check_auth

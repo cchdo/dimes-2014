@@ -3,6 +3,7 @@ Dropzone.autoDiscover = false;
 var write_allowed = true;
 var fs_struct;
 var current_path = [];
+var fs_list_pagenum = 0;
 var dug_tree; // store a reference to the dug tree for mkdir
 if (window.location.hash == ""){
   window.location.hash = encodeURIComponent(JSON.stringify([])); 
@@ -43,16 +44,22 @@ function createRow(icon, body, secondary, accessory) {
   tr.append($('<td class="accessories"></td>').append(accessory));
   return tr;
 }
-function createPaginationButton(text, disabled){
+
+function goto_page(page_num){
+  fs_list_pagenum = page_num;
+  set_table();
+}
+function createPaginationButton(text, disabled, page_to){
   var disabled_text = '';
   if (disabled){
     disabled_text = 'disabled="disabled"';
   }
-  var button = $('<button type="button" class="btn btn-md btn-default" '+ disabled_text +'>'+ text +'</button>');
+  var button = $('<button onclick="goto_page('+page_to+')" type="button" class="btn btn-md btn-default" '+ disabled_text +'>'+ text +'</button>');
   return button;
 }
 
 function createPaginationRow(current_page, total_pages) {
+  current_page -= 1
   var first_page = false;
   if (current_page == 0){
     first_page = true;
@@ -67,18 +74,18 @@ function createPaginationRow(current_page, total_pages) {
   var form = $('<form class="form-inline" role="form"></form>');
   var back_group = $('<div class="btn-group"></div>');
   var for_group = $('<div class="btn-group"></div>');
-  back_group.append(createPaginationButton("First", first_page));
-  back_group.append(createPaginationButton("Prevous", first_page));
-  for_group.append(createPaginationButton("Next", last_page));
-  for_group.append(createPaginationButton("Last", last_page));
+  back_group.append(createPaginationButton("First", first_page, 0));
+  back_group.append(createPaginationButton("Previous", first_page, current_page -1));
+  for_group.append(createPaginationButton("Next", last_page, current_page + 1));
+  for_group.append(createPaginationButton("Last", last_page, total_pages -1));
 
-  var page_select = $('<select class="form-control"></select>');
+  var page_select = $('<select onchange="goto_page(this.value)" class="form-control"></select>');
   for (var i=0; i<total_pages; i++){
     var selected = "";
     if (i == current_page){
       selected = "selected";
     }
-    page_select.append($('<option '+selected+'>Page '+ (i +1) +'</option>'));
+    page_select.append($('<option '+selected+' value="'+i+'">Page '+ (i +1) +'</option>'));
   }
   form.append(back_group);
   form.append(page_select);
@@ -316,12 +323,18 @@ function set_table(){
     .hide().appendTo(new_tbody).fadeIn();
   var files = [];
   parseHash();
+  var query_params = window.location.search;
+  if (query_params.length){
+    query_params += "&page=" + fs_list_pagenum;
+  } else{
+    query_params += "?page=" + fs_list_pagenum;
+  }
   $.ajax({
     type: "POST",
-    url: "/dimesfs/dirflist" + window.location.search,
+    url: "/dimesfs/dirflist" + query_params,
     data: JSON.stringify(current_path),
     success: function(data){
-      files = data;
+      files = data.files;
 
       loader.fadeOut().remove();
 
@@ -336,6 +349,9 @@ function set_table(){
       }
       
       var docfrag = $(document.createDocumentFragment());
+
+      var pager = createPaginationRow(data.page, data.pages);
+      docfrag.append(pager.clone());
 
       var keys = Object.keys(dug_tree);
       keys = keys.sort(localeCompare);
@@ -352,8 +368,7 @@ function set_table(){
         docfrag.append(tr);
       }
 
-      var tr = createPaginationRow(4, 10);
-      docfrag.append(tr);
+      docfrag.append(pager);
 
       if (dimesfs.is_authenticated && write_allowed) {
         docfrag.append(createRowTagBank());
@@ -522,6 +537,7 @@ function dimesfs_mkdir(dir_name){
   set_table();
 }
 function dimesfs_cd(path){
+  fs_list_pagenum = 0;
   if (path == ".."){
     current_path.pop()
   } else {
